@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Nanum+Myeongjo:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Nanum Myeongjo", serif;
+
+  --color-navy-900: #0f172a;
+  --color-navy-800: #1e293b;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #b8860b;
+  --color-soft-blue: #f0f9ff;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-navy-900 text-white rounded-lg font-medium transition-all hover:bg-navy-800 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-outline {
+    @apply px-6 py-3 border border-slate-200 text-slate-600 rounded-lg font-medium transition-all hover:bg-slate-50 active:scale-95;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-navy-900 focus:border-transparent outline-none transition-all;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   리포트 공통 통합 스타일 (Premium WYSIWYG)
+   ══════════════════════════════════════════════ */
+
+.report-page {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  min-height: 1123px;
+  height: auto;
+  background: white;
+  position: relative;
+  margin-bottom: 32px;
+}
+
+/* 1. Page-1 시각 요약 블록 (차트 + 점수) */
+.visual-summary-section {
+  margin-bottom: 0 !important;
+}
+
+.page-1-visual-summary {
+  display: grid !important;
+  grid-template-columns: 55% 45% !important;
+  gap: 12px !important;
+  align-items: flex-start !important;
+}
+
+.chart-wrap {
+  width: 100%;
+  height: 170px;
+  overflow: visible;
+}
+
+.score-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 6px !important;
+}
+
+.score-card {
+  padding: 8px 4px !important;
+}
+
+.score-number {
+  font-size: 1.1rem !important;
+  line-height: 1.2 !important;
+}
+
+/* 2. 페이지 분할 및 가독성 제어 (Premium Layout Control) */
+
+/* 한 덩어리로 유지되어야 하는 블록 (Charts, Info Cards) */
+.avoid-break {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* 자연스럽게 넘어가도 되는 섹션 (Narrative, Lists) */
+.flow-section {
+  break-inside: auto !important;
+  page-break-inside: auto !important;
+  word-break: keep-all;
+}
+
+/* 프리미엄 타이포그래피 */
+.flow-section p {
+  line-height: 1.7 !important;
+  margin-bottom: 0.5rem;
+}
+
+.font-serif.whitespace-pre-wrap {
+  line-height: 1.8 !important;
+  font-size: 14.5px !important;
+  letter-spacing: -0.01em;
+}
+
+/* 페이지 번호 */
+.page-number {
+  position: absolute;
+  bottom: 20px;
+  right: 40px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto !important;
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    position: relative;
+    background: white !important;
+  }
+
+  .report-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .page-number {
+    display: block !important;
+    position: absolute;
+    bottom: 10mm;
+    right: 15mm;
+  }
+
+  /* 인쇄 시 불필요한 UI 제거 */
+  .no-print {
+    display: none !important;
+  }
+
+  /* 컨테이너 배경 및 마진 제거 */
+  .report-container {
+    padding: 0 !important;
+    background: transparent !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  .print-reset {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  /* 섹션 및 카드 인쇄 잘림 방지 */
+  .report-page section,
+  .report-page .grid,
+  .report-page .rounded-2xl,
+  .report-page .rounded-3xl,
+  .report-page footer {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 인쇄 시 2열 그리드 -> 1열 흐름으로 보강 (잘림 방지) */
+  .report-page .md\:grid-cols-12 {
+    display: block !important;
+  }
+
+  .report-page .md\:col-span-5,
+  .report-page .md\:col-span-7 {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 2rem;
+  }
+
+  /* 차트 및 인쇄 컬러 유지 */
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 레이더 차트 SVG 안정화 */
+  .recharts-responsive-container {
+    min-height: 300px !important;
+  }
+
+  svg {
+    overflow: visible !important;
+  }
+}
