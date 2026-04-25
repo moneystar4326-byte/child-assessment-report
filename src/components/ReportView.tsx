@@ -121,8 +121,8 @@ export default function ReportView({ report }: ReportViewProps) {
             <div className="md:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
               <div className="w-full h-80 min-h-[320px] min-w-0 flex items-center justify-center">
                 {report.radarChartData && report.radarChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
-                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={report.radarChartData}>
+                  <div className="w-full flex justify-center">
+                    <RadarChart width={320} height={320} cx="50%" cy="50%" outerRadius="80%" data={report.radarChartData}>
                       <PolarGrid stroke="#f1f5f9" />
                       <PolarAngleAxis 
                         dataKey="subject" 
@@ -137,7 +137,7 @@ export default function ReportView({ report }: ReportViewProps) {
                         fillOpacity={0.1}
                       />
                     </RadarChart>
-                  </ResponsiveContainer>
+                  </div>
                 ) : (
                   <p className="text-slate-400 text-sm">차트 데이터를 불러오는 중입니다...</p>
                 )}
