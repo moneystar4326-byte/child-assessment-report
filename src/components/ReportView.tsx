@@ -121,7 +121,7 @@ export default function ReportView({ report }: ReportViewProps) {
             <div className="md:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
               <div className="w-full h-80 min-h-[320px] min-w-0 flex items-center justify-center">
                 {report.radarChartData && report.radarChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={320}>
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={report.radarChartData}>
                       <PolarGrid stroke="#f1f5f9" />
                       <PolarAngleAxis 
