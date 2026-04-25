@@ -34,8 +34,6 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  console.log('[DEBUG_SERVERLESS_RECV] Keys:', Object.keys(req.body || {}));
-
   try {
     const { childInfo, scores, observationMemo } = req.body;
 
@@ -43,27 +41,50 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'childInfo and scores are required' });
     }
 
-    // 1. Payload 조립 (외부 모듈 의존성 제거를 위해 인라인화)
-    const payload = {
-      metadata: {
-        childName: childInfo.name,
-        age: childInfo.age,
-        consultationDate: childInfo.consultationDate
-      },
-      scores: scores,
-      observationMemo: observationMemo || ""
+    // [전처리] q1~q10 내부 코드를 영역명으로 치환 및 합산 (내부 로직 인라인)
+    // scoring.ts 규격: 0~100점 스케일 변환 반영
+    const getJudgment = (score: number) => {
+      if (score < 40) return "지원 필요";
+      if (score < 70) return "관찰/형성 중";
+      return "양호";
     };
 
+    const domainScores = {
+      "집중력": `${((scores.q1 || 0) + (scores.q2 || 0)) * 10}점 (${getJudgment(((scores.q1 || 0) + (scores.q2 || 0)) * 10)})`,
+      "감정조절": `${((scores.q3 || 0) + (scores.q4 || 0)) * 10}점 (${getJudgment(((scores.q3 || 0) + (scores.q4 || 0)) * 10)})`,
+      "사회성": `${((scores.q5 || 0) + (scores.q6 || 0)) * 10}점 (${getJudgment(((scores.q5 || 0) + (scores.q6 || 0)) * 10)})`,
+      "자기표현/자기조절": `${((scores.q7 || 0) + (scores.q8 || 0)) * 10}점 (${getJudgment(((scores.q7 || 0) + (scores.q8 || 0)) * 10)})`,
+      "도전성": `${((scores.q9 || 0) + (scores.q10 || 0)) * 10}점 (${getJudgment(((scores.q9 || 0) + (scores.q10 || 0)) * 10)})`
+    };
+
+    // 1. Payload 조립 (GPT는 q1, q2를 알 수 없음)
+    const payload = {
+      "아동정보": {
+        "이름": childInfo.name,
+        "나이": childInfo.age,
+        "상담일": childInfo.consultationDate
+      },
+      "발달지표점수": domainScores,
+      "보호자관찰메모": observationMemo || "없음"
+    };
+
+    const SYSTEM_PROMPT = `당신은 아동 발달 리포트 전문가입니다. 제공된 데이터를 보호자용 문장으로 변환하십시오.
+
+## 엄격 규칙 (Must Follow)
+1. 내부 코드 사용 금지: q1, q2, q3 등의 코드는 절대 언급하지 마십시오.
+2. 미화 금지: 70점 미만 영역에 대해 "양호한", "높은 점수", "우수", "안정적", "문제 없음" 등의 표현을 절대 사용하지 마십시오.
+3. 용어 통일: 점수가 낮은 영역은 반드시 "지원 필요", "기초 형성 필요", "반복적 지도 필요"로 기술하십시오.
+4. 재해석 금지: 제공된 숫작값과 등급을 있는 그대로 반영하고, 데이터에 없는 긍정적 측면을 지어내지 마십시오.
+5. 강점 부재 시 처리: 70점 이상인 영역이 하나도 없는 경우, 보충 설명을 생략하고 다음 문장을 반드시 마지막에 포함하십시오: "현재는 특정 강점 영역을 단정하기보다 전반적인 기초 역량을 함께 다져가는 것이 적절합니다."`;
+
     const userPrompt = `
-[데이터 입력]
+[입력 데이터]
 ${JSON.stringify(payload, null, 2)}
 
 [작성 지침]
-위의 데이터를 바탕으로 다음 세 단락을 작성하십시오. Markdown 형식이 아닌, 아래 명칭으로 시작하는 일반 텍스트 섹션으로 응답하십시오.
-
-1. 종합 보고 요약: summaryKey 시그널에 맞춰 전체적인 발달 현황을 한 문장으로 요약하십시오.
-2. 주요 발달 특성 및 강점: strengthAxes에 있는 영역을 우선 서술하십시오. 강점이 없다면 양호한 영역을 중심으로 현 상태를 보고하십시오.
-3. 지원 및 보완 방향: prioritySupportAxisIds 및 severeLowAxes를 참고하여, 보완이 시급한 영역과 구체적인 솔루션을 데이터 기반으로 제시하십시오.
+1. 종합 보고 요약: 전체적인 발달 상태를 냉철하고 객관적으로 요약하십시오.
+2. 주요 발달 특성 및 강점: 70점 이상 영역이 있다면 서술하고, 없다면 지침에 따른 표준 문구를 쓰십시오.
+3. 지원 및 보완 방향: "지원 필요" 등급 영역을 중심으로 구체적인 지도 방안을 제시하십시오.
 `;
 
     // 2. OpenAI 호출
@@ -73,7 +94,7 @@ ${JSON.stringify(payload, null, 2)}
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: userPrompt },
       ],
-      temperature: 0.2,
+      temperature: 0.1, // 창의성 억제, 데이터 정합성 강조
       max_tokens: 2000,
     });
 
