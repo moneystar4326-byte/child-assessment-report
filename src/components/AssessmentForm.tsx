@@ -69,7 +69,7 @@ export default function AssessmentForm({ scores, onChange, onNext, onBack }: Ass
                   }`}
                 >
                   <span className="text-lg font-bold">{score}</span>
-                  <span className="text-[10px] text-center leading-tight hidden md:block">
+                  <span className="text-[10px] text-center leading-tight block">
                     {scoreLabels[score - 1]}
                   </span>
                 </button>
