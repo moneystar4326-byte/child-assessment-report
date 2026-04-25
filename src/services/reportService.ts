@@ -23,7 +23,7 @@ export async function generateReport(data: ReportData): Promise<ReportResult> {
     observationMemo: observationMemo
   });
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
   // 2. AI 리포트 본문 생성을 위한 서버 요청
   try {
