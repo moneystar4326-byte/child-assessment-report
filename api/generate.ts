@@ -21,6 +21,15 @@ const SYSTEM_PROMPT = `## Role
 - "완치", "정상입니다", "병", "진단", "치료", "확신합니다"`;
 
 export default async function handler(req: any, res: any) {
+  // 1. 환경변수 체크 (디버깅)
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('[CONFIG_ERR] OPENAI_API_KEY is missing');
+    return res.status(500).json({
+      success: false,
+      error: "OPENAI_API_KEY_MISSING"
+    });
+  }
+
   // GET 요청은 허용하지 않음
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -71,9 +80,10 @@ ${JSON.stringify(payload, null, 2)}
     });
 
   } catch (error: any) {
-    console.error('[SERVERLESS_FATAL] OpenAI or Logic Error');
+    console.error('[API_GENERATE_FAILED_LOG]', error.message);
     res.status(500).json({
-      error: '서버 내부 오류가 발생했습니다.',
+      success: false,
+      error: "API_GENERATE_FAILED",
       message: error.message
     });
   }
