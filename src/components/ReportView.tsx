@@ -119,7 +119,7 @@ export default function ReportView({ report }: ReportViewProps) {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
             {/* 왼쪽 영역: 레이더 차트 (5컬럼 점유) */}
             <div className="md:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-              <div className="h-[320px] w-full flex items-center justify-center">
+              <div className="w-full h-80 min-h-[320px] min-w-0 flex items-center justify-center">
                 {report.radarChartData && report.radarChartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={report.radarChartData}>
