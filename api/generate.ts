@@ -1,5 +1,4 @@
 import { OpenAI } from 'openai';
-import { assembleReportPayloadV3 } from '../src/utils/reportPayloadBuilder';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -44,8 +43,16 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'childInfo and scores are required' });
     }
 
-    // 1. Payload 조립 (기본 logic 재사용)
-    const payload = assembleReportPayloadV3(childInfo, scores, observationMemo || "");
+    // 1. Payload 조립 (외부 모듈 의존성 제거를 위해 인라인화)
+    const payload = {
+      metadata: {
+        childName: childInfo.name,
+        age: childInfo.age,
+        consultationDate: childInfo.consultationDate
+      },
+      scores: scores,
+      observationMemo: observationMemo || ""
+    };
 
     const userPrompt = `
 [데이터 입력]
