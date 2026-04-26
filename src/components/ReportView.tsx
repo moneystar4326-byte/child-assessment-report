@@ -153,6 +153,31 @@ export default function ReportView({ report }: ReportViewProps) {
   const sentences = cleanedSummary.match(/[^.!?]+[.!?]+/g) || [cleanedSummary];
   const finalSummary = sentences.slice(0, 3).join(' ').trim();
 
+  // 주요 발달 특성 요약 압축 (6개 축을 3문장으로 결합)
+  const getAxisSummary = (id: AxisId) => report.sharedInterpretation?.axisInterpretations?.[id]?.summary || "";
+  const combineAxisPair = (id1: AxisId, id2: AxisId) => {
+    const s1 = getAxisSummary(id1).trim();
+    const s2 = getAxisSummary(id2).trim();
+    if (!s1) return s2;
+    if (!s2) return s1;
+    
+    let joinedS1 = s1;
+    if (joinedS1.endsWith('입니다.')) joinedS1 = joinedS1.replace(/입니다\.$/, '이며,');
+    else if (joinedS1.endsWith('있습니다.')) joinedS1 = joinedS1.replace(/있습니다\.$/, '있으며,');
+    else if (joinedS1.endsWith('합니다.')) joinedS1 = joinedS1.replace(/합니다\.$/, '하며,');
+    else if (joinedS1.endsWith('습니다.')) joinedS1 = joinedS1.replace(/습니다\.$/, '으며,');
+    else if (joinedS1.match(/[가-힣]니다\.$/)) joinedS1 = joinedS1.replace(/니다\.$/, '며,');
+    else joinedS1 = joinedS1.replace(/\.$/, '고,');
+
+    return `${joinedS1} ${s2}`;
+  };
+
+  const combinedFeaturesText = [
+    combineAxisPair('focus', 'emotion'),
+    combineAxisPair('social', 'expression'),
+    combineAxisPair('selfControl', 'challenge')
+  ].filter(Boolean).join(' ');
+
 
   return (
     <div className="report-container font-sans text-slate-800">
@@ -242,20 +267,8 @@ export default function ReportView({ report }: ReportViewProps) {
             <h2 className="text-base font-bold text-slate-900 mb-4 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600 inline-block">
               주요 발달 특성 요약
             </h2>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-              {AXIS_ORDER.map(id => {
-                const interpretation = report.sharedInterpretation?.axisInterpretations?.[id];
-                if (!interpretation) return null;
-                return (
-                  <div key={id} className="flex gap-4 p-3 border-b border-slate-50 items-start">
-                    <div className="shrink-0 mt-0.5">{AXIS_ICONS[id]}</div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-[13px] mb-1">[{interpretation.label}]</h4>
-                      <p className="text-[12px] text-slate-600 leading-relaxed">{interpretation.summary}</p>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl leading-relaxed text-slate-700 text-[13px]">
+              {combinedFeaturesText}
             </div>
           </div>
         </div>
