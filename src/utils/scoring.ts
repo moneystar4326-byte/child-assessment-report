@@ -108,7 +108,7 @@ export const calculateScoringResult = (raw: AssessmentScores): ScoringResult => 
   else if (strengthAxes.length === 6) profileType = 'ALL_ROUNDER';
   else if (strengthAxes.length > 0) profileType = 'STRENGTH_MODEL';
 
-  return {
+  const result = {
     axisScores, bands, states, rawInput: raw,
     strengthAxes, needAxes, severeLowAxes, highestAxis, lowestAxis,
     hasAnyStrength: strengthAxes.length > 0,
@@ -117,4 +117,13 @@ export const calculateScoringResult = (raw: AssessmentScores): ScoringResult => 
     allAxesStrong: strengthAxes.length === 6,
     profileType
   };
+
+  console.log("[SCORING_RESULT]", result.scoredAxes ? result.scoredAxes : (Object.keys(axisScores) as AxisId[]).map(id => ({
+    id,
+    label: id, // We don't have labels here, but we can use id for logging
+    score: axisScores[id],
+    band: bands[id]
+  })));
+
+  return result;
 };

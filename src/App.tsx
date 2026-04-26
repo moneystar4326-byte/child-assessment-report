@@ -91,9 +91,13 @@ export default function App() {
     const interval = setInterval(() => {
       setLoadingStep(prev => (prev < 3 ? prev + 1 : prev));
     }, 2000);
+
+    console.log("[CLIENT_RAW_ANSWERS]", scores);
     
     try {
-      const result = await generateReport({ childInfo, scores, observationMemo: memo, skipAI });
+      const payload = { childInfo, scores, observationMemo: memo, skipAI };
+      console.log("[CLIENT_PAYLOAD_BEFORE_SEND]", JSON.stringify(payload, null, 2));
+      const result = await generateReport(payload);
       setReport(result);
       setStep('result'); // 성공 시에만 화면 전환
     } catch (error) {

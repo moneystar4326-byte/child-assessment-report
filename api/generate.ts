@@ -39,7 +39,12 @@ export default async function handler(req: any, res: any) {
   try {
     const { childInfo, report, observationMemo, scores } = req.body;
     console.log("[SERVER_INPUT_BODY]", JSON.stringify(req.body, null, 2));
-    console.log("[SERVER_SCORES_CHECK]", scores);
+    console.log("[SERVER_SCORED_AXES_RECEIVED]", report.scoredAxes?.map((a: any) => ({
+      id: a.id,
+      label: a.label,
+      score: a.score,
+      band: a.band
+    })));
 
     // 1. [Security] 인증 토큰 검증 (임시 비활성화)
     /*
@@ -195,6 +200,12 @@ ${JSON.stringify({
       taekwondoText: smoothedTaekwondo,
       isValid: true
     };
+    console.log("[SERVER_FINAL_SCORED_AXES]", finalReport.report?.scoredAxes?.map((a: any) => ({
+      id: a.id,
+      label: a.label,
+      score: a.score,
+      band: a.band
+    })));
     console.log("[SERVER_FINAL_REPORT]", JSON.stringify(finalResponse, null, 2));
     res.status(200).json(finalResponse);
 

@@ -15,6 +15,7 @@ const CHART_LABELS: Record<AxisId, string> = {
   focus: "집중력",
   emotion: "감정조절",
   social: "사회성",
+  expression: "자기표현",
   selfControl: "자기조절",
   challenge: "도전성"
 };
@@ -23,6 +24,7 @@ const AXIS_ORDER: AxisId[] = [
   "focus",
   "emotion",
   "social",
+  "expression",
   "selfControl",
   "challenge"
 ];
