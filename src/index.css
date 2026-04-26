@@ -171,7 +171,44 @@
     overflow: visible !important;
   }
 
+  /* 2페이지 이후 레이아웃 미세조정 (강제 고정 해제 및 간격 축소) */
+  .report-page:not(:first-child) {
+    padding: 7mm 8mm !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .report-page:not(:first-child) .report-card,
+  .report-page:not(:first-child) section,
+  .report-page:not(:first-child) article {
+    margin-bottom: 6px !important;
+    padding: 8px 10px !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .report-page:not(:first-child) h2,
+  .report-page:not(:first-child) h3 {
+    margin-bottom: 4px !important;
+    line-height: 1.25 !important;
+  }
+
+  .report-page:not(:first-child) p,
+  .report-page:not(:first-child) li {
+    line-height: 1.35 !important;
+    margin-bottom: 3px !important;
+  }
+
+  .report-page:not(:first-child) .report-footer {
+    margin-top: 6px !important;
+  }
+
   .no-print {
     display: none !important;
   }
+
 }

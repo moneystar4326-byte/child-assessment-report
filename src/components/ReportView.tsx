@@ -282,38 +282,44 @@ export default function ReportView({ report }: ReportViewProps) {
           PAGE 2: 정밀 발달 해석 (Detailed Interpretation)
           ────────────────────────────────────────────────── */}
       <section className="report-page">
-        <div className="report-header border-b border-slate-200 pb-4 mb-6">
+        <div className="report-header border-b border-slate-200 pb-3 mb-4">
           <h2 className="text-2xl font-bold text-slate-900 leading-tight">정밀 발달 해석 및 솔루션</h2>
           <p className="text-xs text-slate-400 uppercase tracking-widest mt-1 italic">Detailed Assessment of Developmental Axes</p>
         </div>
 
-        <div className="report-content space-y-4">
+        <div className="report-content space-y-2.5">
           {AXIS_ORDER.map(id => {
             const interpretation = report.sharedInterpretation?.axisInterpretations?.[id];
             if (!interpretation) return null;
+            const firstSentence = (text: string) => {
+              if (!text) return "";
+              const match = text.match(/[^.!?]+[.!?]+/);
+              return match ? match[0].trim() : text.trim();
+            };
+
             return (
-              <div key={id} className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center">
-                <div className="flex items-center justify-between mb-3">
+              <div key={id} className="bg-slate-50/50 p-2.5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-xl shadow-sm scale-90">{AXIS_ICONS[id]}</div>
-                    <span className="font-bold text-slate-900 text-lg">{interpretation.label}</span>
+                    <div className="p-1.5 bg-white rounded-lg shadow-sm scale-90">{AXIS_ICONS[id]}</div>
+                    <span className="font-bold text-slate-900 text-[15px]">{interpretation.label}</span>
                   </div>
-                  <span className="px-4 py-1 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-500 uppercase tracking-wider shadow-sm">
+                  <span className="px-3 py-0.5 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-wider shadow-sm">
                     {getBandBadgeText(interpretation.state.band)}
                   </span>
                 </div>
-                <div className="grid grid-cols-12 gap-4">
-                  <div className="col-span-4 p-3 bg-white rounded-2xl border border-slate-50 shadow-sm">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-tight">현재 상태</p>
-                    <p className="text-[12px] text-slate-800 font-bold leading-relaxed">{interpretation.summary}</p>
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-4 p-2 bg-white rounded-xl border border-slate-50 shadow-sm">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1 tracking-tight">현재 상태</p>
+                    <p className="text-[11px] text-slate-800 font-bold leading-snug">{firstSentence(interpretation.summary)}</p>
                   </div>
-                  <div className="col-span-4 p-3 bg-white rounded-2xl border border-slate-50 shadow-sm">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-tight">발현 원인</p>
-                    <p className="text-[12px] text-slate-600 leading-relaxed">{interpretation.reason}</p>
+                  <div className="col-span-4 p-2 bg-white rounded-xl border border-slate-50 shadow-sm">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1 tracking-tight">발현 원인</p>
+                    <p className="text-[11px] text-slate-600 leading-snug">{firstSentence(interpretation.reason)}</p>
                   </div>
-                  <div className="col-span-4 p-3 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-blue-500 uppercase mb-1.5 tracking-tight">지도 방향</p>
-                    <p className="text-[12px] text-slate-800 font-bold leading-relaxed">{interpretation.action}</p>
+                  <div className="col-span-4 p-2 bg-blue-50/50 rounded-xl border border-blue-100 shadow-sm">
+                    <p className="text-[9px] font-bold text-blue-500 uppercase mb-1 tracking-tight">지도 방향</p>
+                    <p className="text-[11px] text-slate-800 font-bold leading-snug">{firstSentence(interpretation.action)}</p>
                   </div>
                 </div>
               </div>
@@ -335,13 +341,14 @@ export default function ReportView({ report }: ReportViewProps) {
           <p className="text-xs text-slate-400 uppercase tracking-widest mt-1 italic">Strengths, Temperament & Lifestyle Guidance</p>
         </div>
 
-        <div className="report-content">
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 shadow-sm">
-              <h3 className="text-emerald-900 font-bold mb-4 flex items-center gap-3">
-                <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
-                발달 강점 (Strengths)
-              </h3>
+        <div className="report-content flex flex-col justify-between h-full">
+          <div>
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 shadow-sm print:break-inside-avoid">
+                <h3 className="text-emerald-900 font-bold mb-3 flex items-center gap-3">
+                  <div className="w-1.5 h-5 bg-emerald-500 rounded-full" />
+                  발달 강점 (Strengths)
+                </h3>
               <div className="flex flex-wrap gap-2">
                 {(report.sharedInterpretation?.strengths?.length ?? 0) > 0 ? (
                   report.sharedInterpretation?.strengths?.map(id => (
@@ -354,9 +361,9 @@ export default function ReportView({ report }: ReportViewProps) {
                 )}
               </div>
             </div>
-            <div className="bg-rose-50 p-6 rounded-3xl border border-rose-100 shadow-sm">
-              <h3 className="text-rose-900 font-bold mb-4 flex items-center gap-3">
-                <div className="w-1.5 h-6 bg-rose-500 rounded-full" />
+            <div className="bg-rose-50 p-5 rounded-2xl border border-rose-100 shadow-sm print:break-inside-avoid">
+              <h3 className="text-rose-900 font-bold mb-3 flex items-center gap-3">
+                <div className="w-1.5 h-5 bg-rose-500 rounded-full" />
                 우선 지원 영역 (Needs)
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -374,55 +381,55 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
 
           {report.temperament && (
-            <div className="mb-6">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+            <div className="mb-6 print:break-inside-avoid">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3">
                 <div className="w-1 h-5 bg-blue-600" />
                 기질 특성 해석
               </h2>
-              <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] relative overflow-visible shadow-sm">
-                <div className="mb-6">
-                  <p className="text-blue-900 font-bold text-xl mb-3">{report.temperament.temperamentSummary}</p>
-                  <div className="h-1 w-20 bg-blue-200 rounded-full" />
+              <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl relative overflow-visible shadow-sm">
+                <div className="mb-4">
+                  <p className="text-blue-900 font-bold text-[16px] mb-2">{report.temperament.temperamentSummary}</p>
+                  <div className="h-1 w-16 bg-blue-200 rounded-full" />
                 </div>
-                <div className="grid grid-cols-3 gap-8">
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">[기본 성향]</p>
-                    <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{report.temperament.temperamentSeed.mainStyle}</p>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">[기본 성향]</p>
+                    <p className="text-[12px] text-slate-800 leading-snug font-bold">{report.temperament.temperamentSeed.mainStyle}</p>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">[지원 방향]</p>
-                    <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{report.temperament.temperamentSeed.supportApproach}</p>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">[지원 방향]</p>
+                    <p className="text-[12px] text-slate-800 leading-snug font-bold">{report.temperament.temperamentSeed.supportApproach}</p>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">[주의 사항]</p>
-                    <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{report.temperament.temperamentSeed.cautionPoint}</p>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">[주의 사항]</p>
+                    <p className="text-[12px] text-slate-800 leading-snug font-bold">{report.temperament.temperamentSeed.cautionPoint}</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex-1">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+          <div className="flex-1 print:break-inside-avoid">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3">
               <div className="w-1 h-5 bg-slate-900" />
               생활 연계 솔루션
             </h2>
-            <div className="grid grid-cols-2 gap-8">
-              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                <h4 className="text-[11px] font-bold text-slate-400 mb-4 uppercase tracking-widest border-b border-slate-200 pb-2">[가정에서의 노력]</h4>
-                <ul className="space-y-4">
-                  {report.sharedInterpretation?.guidance?.home?.map((item, idx) => (
-                    <li key={idx} className="text-[13px] text-slate-700 pl-3 border-l-4 border-blue-200 leading-relaxed font-bold">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
+                <h4 className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-widest border-b border-slate-200 pb-2">[가정에서의 노력]</h4>
+                <ul className="space-y-3">
+                  {report.sharedInterpretation?.guidance?.home?.slice(0, 2).map((item, idx) => (
+                    <li key={idx} className="text-[12px] text-slate-700 pl-3 border-l-4 border-blue-200 leading-snug font-bold">
                       {item}
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                <h4 className="text-[11px] font-bold text-slate-400 mb-4 uppercase tracking-widest border-b border-slate-200 pb-2">[기관/도장에서의 지도]</h4>
-                <ul className="space-y-4">
-                  {report.sharedInterpretation?.guidance?.center?.map((item, idx) => (
-                    <li key={idx} className="text-[13px] text-slate-700 pl-3 border-l-4 border-slate-300 leading-relaxed font-bold">
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
+                <h4 className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-widest border-b border-slate-200 pb-2">[기관/도장에서의 지도]</h4>
+                <ul className="space-y-3">
+                  {report.sharedInterpretation?.guidance?.center?.slice(0, 2).map((item, idx) => (
+                    <li key={idx} className="text-[12px] text-slate-700 pl-3 border-l-4 border-slate-300 leading-snug font-bold">
                       {item}
                     </li>
                   ))}
@@ -430,6 +437,7 @@ export default function ReportView({ report }: ReportViewProps) {
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
@@ -455,44 +463,51 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
         </div>
 
-        <div className="report-content">
-          <div className="mb-6">
-            <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl">
-              <p className="text-[14px] text-slate-800 font-bold leading-relaxed">
+        <div className="report-content flex flex-col justify-between h-full">
+          <div className="mb-4">
+            <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm print:break-inside-avoid">
+              <p className="text-[13px] text-slate-800 font-bold leading-snug">
                 {report.taekwondoRecommendation?.summary}
               </p>
             </div>
           </div>
 
-          <div className="space-y-5 flex-1 overflow-visible">
-            {programPageOne.map((program, idx) => (
-              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-visible shadow-sm">
-                <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
-                  <h3 className="text-white font-bold text-base">{idx + 1}. {program.title}</h3>
-                  <Zap className="w-4 h-4 text-amber-400" />
+          <div className="space-y-4 flex-1 overflow-visible">
+            {programPageOne.map((program, idx) => {
+              const firstSentence = (text: string) => {
+                if (!text) return "";
+                const match = text.match(/[^.!?]+[.!?]+/);
+                return match ? match[0].trim() : text.trim();
+              };
+              return (
+              <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-visible shadow-sm print:break-inside-avoid">
+                <div className="bg-slate-900 px-5 py-2 flex justify-between items-center rounded-t-2xl">
+                  <h3 className="text-white font-bold text-[14px]">{idx + 1}. {program.title}</h3>
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
                 </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-x-5 gap-y-3">
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">왜 필요한가</p>
-                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.reason}</p>
+                      <p className="text-[12px] text-slate-700 leading-snug font-medium">{firstSentence(program.reason)}</p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">어떻게 지도하는가</p>
-                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.application}</p>
+                      <p className="text-[12px] text-slate-700 leading-snug font-medium">{firstSentence(program.application)}</p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">수련 효과</p>
-                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.effect}</p>
+                      <p className="text-[12px] text-slate-700 leading-snug font-medium">{firstSentence(program.effect)}</p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">지도 시 주의점</p>
-                      <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{program.caution}</p>
+                      <p className="text-[12px] text-slate-800 leading-snug font-bold">{firstSentence(program.caution)}</p>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -519,48 +534,55 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
         </div>
 
-        <div className="report-content">
-          <div className="space-y-5 mb-8 overflow-visible">
-            {programPageTwo.map((program, idx) => (
-              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-visible shadow-sm">
-                <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
-                  <h3 className="text-white font-bold text-base">{idx + 4}. {program.title}</h3>
-                  <Zap className="w-4 h-4 text-amber-400" />
+        <div className="report-content flex flex-col justify-between h-full">
+          <div className="space-y-4 mb-6 overflow-visible">
+            {programPageTwo.map((program, idx) => {
+              const firstSentence = (text: string) => {
+                if (!text) return "";
+                const match = text.match(/[^.!?]+[.!?]+/);
+                return match ? match[0].trim() : text.trim();
+              };
+              return (
+              <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-visible shadow-sm print:break-inside-avoid">
+                <div className="bg-slate-900 px-5 py-2 flex justify-between items-center rounded-t-2xl">
+                  <h3 className="text-white font-bold text-[14px]">{idx + 4}. {program.title}</h3>
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
                 </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-x-5 gap-y-3">
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">왜 필요한가</p>
-                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.reason}</p>
+                      <p className="text-[12px] text-slate-700 leading-snug font-medium">{firstSentence(program.reason)}</p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">어떻게 지도하는가</p>
-                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.application}</p>
+                      <p className="text-[12px] text-slate-700 leading-snug font-medium">{firstSentence(program.application)}</p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">수련 효과</p>
-                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.effect}</p>
+                      <p className="text-[12px] text-slate-700 leading-snug font-medium">{firstSentence(program.effect)}</p>
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">지도 시 주의점</p>
-                      <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{program.caution}</p>
+                      <p className="text-[12px] text-slate-800 leading-snug font-bold">{firstSentence(program.caution)}</p>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {report.taekwondoRecommendation && report.taekwondoRecommendation.constraints.length > 0 && (
-            <div className="mb-6 p-5 bg-rose-50 border border-rose-100 rounded-3xl shrink-0">
-              <p className="text-[12px] font-bold text-rose-600 mb-3 uppercase tracking-widest flex items-center gap-2">
+            <div className="mb-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl shrink-0 print:break-inside-avoid">
+              <p className="text-[12px] font-bold text-rose-600 mb-2 uppercase tracking-widest flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 심화 수련 제한 및 안전 가이드
               </p>
-              <ul className="grid grid-cols-2 gap-3">
+              <ul className="grid grid-cols-2 gap-2.5">
                 {report.taekwondoRecommendation.constraints.map((c, idx) => (
-                  <li key={idx} className="text-[12px] text-rose-800 flex items-start gap-2 leading-relaxed font-bold">
-                    <div className="w-1.5 h-1.5 bg-rose-400 rounded-full mt-1.5 shrink-0" />
+                  <li key={idx} className="text-[11px] text-rose-800 flex items-start gap-2 leading-snug font-bold">
+                    <div className="w-1.5 h-1.5 bg-rose-400 rounded-full mt-1 shrink-0" />
                     {c}
                   </li>
                 ))}
@@ -591,29 +613,31 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
         </div>
 
-        <div className="report-content flex flex-col justify-center">
-          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-visible shadow-2xl">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-20 -mt-20" />
+        <div className="report-content flex flex-col justify-center h-full">
+          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-visible shadow-xl print:break-inside-avoid">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-20 -mt-20 pointer-events-none" />
             <div className="relative">
-              <h4 className="text-xl font-bold mb-6 leading-relaxed">
+              <h4 className="text-[22px] font-bold mb-6 leading-snug">
                 " 아이의 마음을 먼저 읽어주는 태권도 수련, <br/> 
                 성장의 조급함보다 바른 발달을 위한 따뜻한 기다림이 필요합니다. "
               </h4>
-              <div className="space-y-5">
-                <p className="text-[14px] leading-relaxed opacity-90 text-slate-300">
+              <div className="space-y-6">
+                <p className="text-[14px] leading-snug opacity-90 text-slate-300">
                   본 수련 설계는 <strong className="text-white">{childName} 아동</strong>의 발달 흐름을 바탕으로 제안하는 맞춤형 안내입니다.
                 </p>
-                <div className="p-5 bg-white/10 rounded-2xl border border-white/10">
-                  <h5 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-widest">보호자 안내</h5>
-                  <p className="text-[13px] leading-relaxed text-slate-200">
-                    가정에서도 리포트에 제시된 '가정에서의 노력'을 함께 실천해 주시면, 도장에서의 수련 효과가 더욱 깊어집니다. 아이의 작은 변화와 시도를 아낌없이 칭찬해 주세요.
-                  </p>
-                </div>
-                <div className="p-5 bg-white/10 rounded-2xl border border-white/10">
-                  <h5 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-widest">기관/도장 상담 마무리</h5>
-                  <p className="text-[13px] leading-relaxed text-slate-200">
-                    아이의 기질과 현재의 마음 상태를 세심하게 살피며, 도장에서 가장 즐겁게 성장할 수 있도록 유연하게 수련을 조정해 나가겠습니다. 궁금하신 점은 언제든 관장님께 문의해 주세요.
-                  </p>
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="p-5 bg-white/10 rounded-2xl border border-white/10 h-full flex flex-col justify-start">
+                    <h5 className="text-[12px] font-bold text-blue-300 mb-2.5 uppercase tracking-widest border-b border-white/20 pb-2">보호자 안내</h5>
+                    <p className="text-[13px] leading-snug text-slate-200">
+                      가정에서도 리포트에 제시된 '가정에서의 노력'을 함께 실천해 주시면, 도장에서의 수련 효과가 더욱 깊어집니다. 아이의 작은 변화와 시도를 아낌없이 칭찬해 주세요.
+                    </p>
+                  </div>
+                  <div className="p-5 bg-white/10 rounded-2xl border border-white/10 h-full flex flex-col justify-start">
+                    <h5 className="text-[12px] font-bold text-blue-300 mb-2.5 uppercase tracking-widest border-b border-white/20 pb-2">기관/도장 상담 마무리</h5>
+                    <p className="text-[13px] leading-snug text-slate-200">
+                      아이의 기질과 현재의 마음 상태를 세심하게 살피며, 도장에서 가장 즐겁게 성장할 수 있도록 유연하게 수련을 조정해 나가겠습니다. 궁금하신 점은 언제든 관장님께 문의해 주세요.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
