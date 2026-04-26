@@ -3,8 +3,17 @@ import { calculateScoringResult } from "./scoring";
 import type { SharedInterpretation } from "./interpretation";
 import { buildSharedInterpretation } from "./interpretation";
 import { analyzeTemperament } from "./temperamentEngine";
+import { analyzeTaekwondoProgram } from "./taekwondoEngine";
 import { buildRadarChartData, RadarChartDatum } from "./chartModel";
-import type { AssessmentScores, TemperamentResult, ReportResult } from "../types";
+import type { AssessmentScores, TemperamentResult, ReportResult, TaekwondoRecommendation } from "../types";
+
+export interface BuildReportInput {
+  childName: string;
+  age: string;
+  counselorName: string;
+  assessmentScores: AssessmentScores;
+  observationMemo: string;
+}
 
 /**
  * 3. buildReport 함수 구현
@@ -23,12 +32,15 @@ export function buildReport(input: BuildReportInput): ReportResult {
     scoringResult.bands
   );
 
-  // D. 차트 데이터 생성 호출
+  // D. 태권도 프로그램 분석 엔진 호출
+  const taekwondoRecommendation = analyzeTaekwondoProgram(scoringResult, parseInt(input.age, 10));
+
+  // E. 차트 데이터 생성 호출
   const radarChartData = buildRadarChartData(
     scoringResult.axisScores
   );
 
-  // E. 최종 리포트 객체 조립
+  // F. 최종 리포트 객체 조립
   return {
     childName: input.childName,
     age: input.age,
@@ -38,6 +50,7 @@ export function buildReport(input: BuildReportInput): ReportResult {
     states: scoringResult.states,
     sharedInterpretation,
     temperament,
+    taekwondoRecommendation,
     radarChartData
   };
 }

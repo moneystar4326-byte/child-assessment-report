@@ -20,6 +20,23 @@ export interface AssessmentScores {
  * [Phase 9-Types] 상용 SaaS 리포트 엔진 통합 타입 정의
  * reportAssembler.ts의 구조를 시스템 표준(SSOT)으로 채택합니다.
  */
+export interface TaekwondoProgramDetail {
+  title: string;
+  reason: string;
+  application: string;
+  effect: string;
+  caution: string;
+}
+
+export interface TaekwondoRecommendation {
+  summary: string;
+  reasons: string[];
+  programs: string[];
+  detailedPrograms: TaekwondoProgramDetail[];
+  constraints: string[];
+  teachingGuidance: string[];
+}
+
 export interface ReportResult {
   childName: string;
   age: string;
@@ -30,7 +47,9 @@ export interface ReportResult {
   sharedInterpretation: SharedInterpretation;
   radarChartData: any[]; 
   temperament?: TemperamentResult;
+  taekwondoRecommendation?: TaekwondoRecommendation;
   aiReportText?: string;
+  aiTaekwondoText?: string;
 }
 
 export type TemperamentSeed = {

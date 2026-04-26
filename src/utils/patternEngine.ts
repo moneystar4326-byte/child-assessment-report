@@ -11,9 +11,7 @@ export const analyzeDevelopmentPattern = (
   axisScores: Record<AxisId, number>,
   bands: Record<AxisId, Band>
 ): DevelopmentPattern => {
-  console.log("--- [patternEngine] Analysis Start ---");
-  console.log("[input] axisScores", JSON.stringify(axisScores, null, 2));
-  console.log("[input] bands", JSON.stringify(bands, null, 2));
+
 
   // 1. primary/secondary Weak Axes 추출
   // - low band만 대상
@@ -49,8 +47,7 @@ export const analyzeDevelopmentPattern = (
       .filter((id) => !primaryWeakAxes.includes(id));
   }
 
-  console.log("[step 1] primaryWeakAxes:", primaryWeakAxes);
-  console.log("[step 1] secondaryWeakAxes:", secondaryWeakAxes);
+
 
   // 2. patternTags 생성 (하드코딩 규칙표)
   const tags: string[] = [];
@@ -84,13 +81,13 @@ export const analyzeDevelopmentPattern = (
 
   // 중복 제거 및 최대 3개
   const uniqueTags = Array.from(new Set(tags)).slice(0, 3);
-  console.log("[step 2] patternTags:", uniqueTags);
+
 
   // 3. summaryPattern 생성
   const summaryPattern = uniqueTags.length > 0 
     ? uniqueTags.join(" + ") 
     : "전반적으로 균형적인 반응";
-  console.log("[step 3] summaryPattern:", summaryPattern);
+
 
   // 4. analysisSeed & counselingSeed 생성 (Dual-Seed Logic)
   const analysisSeed = {
@@ -153,9 +150,7 @@ export const analyzeDevelopmentPattern = (
     }
   }
 
-  console.log("[step 4] analysisSeed:", analysisSeed);
-  console.log("[step 4] counselingSeed:", counselingSeed);
-  console.log("--- [patternEngine] Analysis End ---");
+
 
   return {
     primaryWeakAxes,

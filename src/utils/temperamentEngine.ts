@@ -17,7 +17,7 @@ export function analyzeTemperament(
   axisScores: Record<AxisId, number>,
   bands: Record<AxisId, Band>
 ): TemperamentResult {
-  console.log("--- [temperamentEngine] Analysis Start ---");
+
 
   // 1. 점수 초기화 및 우선순위 설정
   // 감정형(50) > 신중형(40) > 활동형(30) > 관계형(20) > 도전형(10)
@@ -66,8 +66,7 @@ export function analyzeTemperament(
   const primaryTemperament = sorted[0];
   const secondaryTemperament = sorted[1];
 
-  console.log("[step 1] Scores:", scores);
-  console.log("[step 2] Selected:", { primaryTemperament, secondaryTemperament });
+
 
   // 5. temperamentSummary 및 Tags 생성
   const temperamentTags = [primaryTemperament, secondaryTemperament];
@@ -110,8 +109,7 @@ export function analyzeTemperament(
     cautionPoint: primarySeed.cautionPoint
   };
 
-  console.log("[step 3] Final Seed:", temperamentSeed);
-  console.log("--- [temperamentEngine] Analysis End ---");
+
 
   return {
     primaryTemperament,

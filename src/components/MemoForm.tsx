@@ -5,6 +5,7 @@ interface MemoFormProps {
   onChange: (memo: string) => void;
   onNext: () => void;
   onBack: () => void;
+  isGenerating?: boolean;
 }
 
 const examples = [
@@ -14,7 +15,7 @@ const examples = [
   "좋아하는 것에는 엄청난 집중력을 보여요"
 ];
 
-export default function MemoForm({ memo, onChange, onNext, onBack }: MemoFormProps) {
+export default function MemoForm({ memo, onChange, onNext, onBack, isGenerating = false }: MemoFormProps) {
   return (
     <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-8">
       <div className="mb-8">
@@ -72,10 +73,11 @@ export default function MemoForm({ memo, onChange, onNext, onBack }: MemoFormPro
         </button>
         <button 
           onClick={onNext}
-          className="btn-primary flex items-center gap-2 bg-gold-600 hover:bg-gold-500"
+          disabled={isGenerating}
+          className={`btn-primary flex items-center gap-2 ${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-gold-600 hover:bg-gold-500'}`}
         >
-          종합 해석 리포트 생성하기
-          <Sparkles className="w-4 h-4" />
+          {isGenerating ? '리포트 생성 중...' : '종합 해석 리포트 생성하기'}
+          {!isGenerating && <Sparkles className="w-4 h-4" />}
         </button>
       </div>
     </div>

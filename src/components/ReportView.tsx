@@ -2,12 +2,10 @@ import React from 'react';
 import type { ReportResult } from "../types";
 import type { AxisId, Band, AxisState } from "../utils/scoring";
 import { Sparkles, Target, Shield, Users, Heart, Zap, MessageSquare } from 'lucide-react';
-import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 /**
  * [Phase 5-View] 상용 SaaS 리포트 엔진 - Render Only 컴포넌트
- * 데이터 원본을 sharedInterpretation.axisInterpretations 중심으로 단일화하여 
- * 데이터 정합성과 타입 안정성을 강화한 버전입니다.
+ * 5페이지 프리미엄 레이아웃 버전 (엄격한 인쇄 규격 적용)
  */
 
 type ReportViewProps = {
@@ -32,39 +30,127 @@ const AXIS_ICONS: Record<AxisId, React.ReactNode> = {
   challenge: <Zap className="w-5 h-5 text-amber-600" />,
 };
 
-// 밴드 레이블 표시 변환 함수 (타입 안전성 확보)
 function getBandBadgeText(band: Band): string {
   switch (band) {
     case 'supportNeeded': return "지원 필요";
     case 'watching': return "관찰 필요";
-    case 'fair': return "비교적 양호";
-    case 'strong': return "강점";
+    case 'fair': return "고른 발달";
+    case 'strong': return "강점 지표";
     default: return band;
   }
 }
 
-// 상태별 색상 매핑 함수 (타입 안전성 확보)
 function getStateColor(state: AxisState): string {
   switch (state) {
-    case 'risk': return "#ef4444";     // red-500
-    case 'unstable': return "#f59e0b"; // amber-500
-    case 'stable': return "#10b981";   // emerald-500
-    default: return "#64748b";         // slate-500
+    case 'risk': return "#ef4444";
+    case 'unstable': return "#f59e0b";
+    case 'stable': return "#10b981";
+    default: return "#64748b";
   }
+}
+
+/**
+ * Pure SVG Radar Chart Component
+ * 라이브러리 없이 PDF/인쇄에서 가장 안정적으로 렌더링됨
+ */
+function PureRadarChart({ data }: { data: { subject: string; score: number }[] }) {
+  const centerX = 125;
+  const centerY = 105;
+  const radius = 70;
+  const levels = 4;
+  
+  const getPoint = (index: number, r: number) => {
+    const angle = (-90 + index * 60) * (Math.PI / 180);
+    return {
+      x: centerX + r * Math.cos(angle),
+      y: centerY + r * Math.sin(angle)
+    };
+  };
+
+  // Background Grid Polygons
+  const grids = [];
+  for (let i = 1; i <= levels; i++) {
+    const r = (radius / levels) * i;
+    const points = data.map((_, idx) => {
+      const p = getPoint(idx, r);
+      return `${p.x},${p.y}`;
+    }).join(' ');
+    grids.push(<polygon key={`grid-${i}`} points={points} fill="none" stroke="#f1f5f9" strokeWidth="1" />);
+  }
+
+  // Axis Lines
+  const axes = data.map((_, idx) => {
+    const p = getPoint(idx, radius);
+    return <line key={`axis-${idx}`} x1={centerX} y1={centerY} x2={p.x} y2={p.y} stroke="#f1f5f9" strokeWidth="1" />;
+  });
+
+  // Score Polygon
+  const scorePoints = data.map((d, idx) => {
+    const p = getPoint(idx, radius * (Math.min(100, Math.max(0, d.score)) / 100));
+    return `${p.x},${p.y}`;
+  }).join(' ');
+
+  // Labels
+  const labels = data.map((d, idx) => {
+    const p = getPoint(idx, radius + 15);
+    let textAnchor = "middle";
+    if (p.x < centerX - 10) textAnchor = "end";
+    else if (p.x > centerX + 10) textAnchor = "start";
+    
+    // Y축 보정 (위/아래 텍스트 겹침 방지)
+    let dy = "0.35em";
+    if (idx === 0) dy = "-0.5em"; // 맨 위
+    if (idx === 3) dy = "1.2em";  // 맨 아래
+    
+    return (
+      <text
+        key={`label-${idx}`}
+        x={p.x}
+        y={p.y}
+        fill="#64748b"
+        fontSize="10"
+        fontWeight="bold"
+        textAnchor={textAnchor}
+        dy={dy}
+      >
+        {d.subject}
+      </text>
+    );
+  });
+
+  // Score Dots
+  const dots = data.map((d, idx) => {
+    const p = getPoint(idx, radius * (Math.min(100, Math.max(0, d.score)) / 100));
+    return <circle key={`dot-${idx}`} cx={p.x} cy={p.y} r="3" fill="#2563eb" />;
+  });
+
+  return (
+    <svg width="250" height="210" viewBox="0 0 250 210" style={{ display: 'block' }}>
+      {grids}
+      {axes}
+      <polygon points={scorePoints} fill="#3b82f6" fillOpacity="0.1" stroke="#2563eb" strokeWidth="2" />
+      {dots}
+      {labels}
+    </svg>
+  );
 }
 
 export default function ReportView({ report }: ReportViewProps) {
   const { sharedInterpretation, childName, age, counselorName } = report;
 
+  // 프로그램 배열 분리 (요구사항 6번)
+  const allPrograms = report.taekwondoRecommendation?.detailedPrograms || [];
+  const programPageOne = allPrograms.slice(0, 3);
+  const programPageTwo = allPrograms.slice(3, 6);
+
   return (
-    <div className="report-container max-w-[800px] mx-auto bg-slate-100 p-8 space-y-12 font-sans text-slate-800">
+    <div className="report-container font-sans text-slate-800">
       
       {/* ──────────────────────────────────────────────────
           PAGE 1: 종합 분석 및 지표 요약
           ────────────────────────────────────────────────── */}
-      <section className="report-page bg-white shadow-xl min-h-[1100px] p-10 flex flex-col border border-slate-200 rounded-sm">
-        
-        <header className="border-b-4 border-slate-900 pb-6 mb-8 flex justify-between items-center">
+      <section className="report-page">
+        <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
           <div>
             <div className="flex items-center gap-2 mb-2 text-blue-600">
               <Sparkles className="w-5 h-5 fill-current" />
@@ -76,93 +162,85 @@ export default function ReportView({ report }: ReportViewProps) {
             <p className="font-bold text-slate-900">{childName} 아동</p>
             <p>만 {age}세 | 상담자: {counselorName}</p>
           </div>
-        </header>
-
-        <div className="mb-10">
-          <h2 className="text-lg font-bold text-slate-900 mb-4 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600">
-            종합 분석 한눈에 보기
-          </h2>
-          <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl leading-relaxed text-slate-700">
-            {sharedInterpretation.overallSummary}
-          </div>
         </div>
 
-        {/* 보호자 관찰 메모 반영 섹션 (NEW) */}
-        <div className="mb-10">
-          <h2 className="text-lg font-bold text-slate-900 mb-4 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600">
-            보호자 관찰 메모 반영
-          </h2>
-          <div className="bg-slate-50 border border-slate-200 p-6 rounded-xl space-y-4">
-            <p className="text-slate-700 text-sm leading-relaxed">
-              {sharedInterpretation.memoReflection.summary}
-            </p>
-            {sharedInterpretation.memoReflection.matchedKeywords.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {sharedInterpretation.memoReflection.matchedKeywords.map((kw, idx) => (
-                  <span key={idx} className="px-2 py-1 bg-white border border-slate-200 text-slate-500 text-[10px] font-bold rounded-md">
-                    #{kw}
-                  </span>
-                ))}
+        <div className="report-content">
+          <div className="mb-6">
+            <h2 className="text-base font-bold text-slate-900 mb-3 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600 inline-block">
+              종합 분석 한눈에 보기
+            </h2>
+            <div className="bg-blue-50 border border-blue-100 p-5 rounded-xl leading-relaxed text-slate-700 whitespace-pre-wrap text-[14px]">
+              {report.aiReportText || sharedInterpretation.overallSummary}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h2 className="text-base font-bold text-slate-900 mb-3 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600 inline-block">
+              보호자 관찰 메모 반영
+            </h2>
+            <div className="bg-slate-50 border border-slate-200 p-5 rounded-xl italic text-slate-600 text-[13px]">
+              "{sharedInterpretation.memoReflection?.summary || "기록된 메모가 없습니다."}"
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h2 className="text-base font-bold text-slate-900 mb-4 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600 inline-block">
+              발달 지표 점수 요약
+            </h2>
+            <div className="grid grid-cols-12 gap-6 items-center">
+              <div className="col-span-5 bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center relative">
+                <div className="radar-chart-box flex justify-center items-center">
+                  <PureRadarChart 
+                    data={report.radarChartData?.length ? report.radarChartData : [
+                      { subject: "집중력", score: 0 },
+                      { subject: "감정조절", score: 0 },
+                      { subject: "사회성", score: 0 },
+                      { subject: "자기표현", score: 0 },
+                      { subject: "자기조절", score: 0 },
+                      { subject: "도전성", score: 0 }
+                    ]}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* ──────────────────────────────────────────────────
-            PAGE 1: 시각적 요약 섹션 (복구 버전)
-            ────────────────────────────────────────────────── */}
-        <div className="mb-10">
-          <h2 className="text-lg font-bold text-slate-900 mb-6 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600">
-            발달 지표 점수 요약
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-            {/* 왼쪽 영역: 레이더 차트 (5컬럼 점유) */}
-            <div className="md:col-span-5 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
-              <div className="w-full h-80 min-h-[320px] min-w-0 flex items-center justify-center">
-                {report.radarChartData && report.radarChartData.length > 0 ? (
-                  <div className="w-full flex justify-center">
-                    <RadarChart width={320} height={320} cx="50%" cy="50%" outerRadius="80%" data={report.radarChartData}>
-                      <PolarGrid stroke="#f1f5f9" />
-                      <PolarAngleAxis 
-                        dataKey="subject" 
-                        tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
-                      />
-                      <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar
-                        name="발달 점수"
-                        dataKey="score"
-                        stroke="#2563eb"
-                        fill="#3b82f6"
-                        fillOpacity={0.1}
-                      />
-                    </RadarChart>
-                  </div>
-                ) : (
-                  <p className="text-slate-400 text-sm">차트 데이터를 불러오는 중입니다...</p>
-                )}
+              <div className="col-span-7 grid grid-cols-3 gap-3">
+                {AXIS_ORDER.map(id => {
+                  const interpretation = report.sharedInterpretation?.axisInterpretations?.[id];
+                  if (!interpretation) return null;
+                  const scoreColor = getStateColor(interpretation.state.state);
+                  return (
+                    <div key={id} className="bg-white border border-slate-50 p-4 rounded-2xl shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: scoreColor }} />
+                      <p className="text-[11px] font-bold text-slate-400 uppercase mb-1 tracking-tight">{interpretation.label}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black" style={{ color: scoreColor }}>{interpretation.score}</span>
+                        <span className="text-[10px] text-slate-300 font-bold uppercase">pt</span>
+                      </div>
+                      <div className="mt-2">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500">
+                          {getBandBadgeText(interpretation.state.band)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
-            {/* 오른쪽 영역: 점수 요약 카드 (7컬럼 점유) */}
-            <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="flex-1">
+            <h2 className="text-base font-bold text-slate-900 mb-4 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600 inline-block">
+              주요 발달 특성 요약
+            </h2>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               {AXIS_ORDER.map(id => {
                 const interpretation = report.sharedInterpretation?.axisInterpretations?.[id];
                 if (!interpretation) return null;
-
-                const scoreColor = getStateColor(interpretation.state.state);
                 return (
-                  <div key={id} className="bg-white border border-slate-50 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: scoreColor }} />
-                    <p className="text-[11px] font-bold text-slate-400 uppercase mb-1 tracking-tight">{interpretation.label}</p>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black" style={{ color: scoreColor }}>{interpretation.score}</span>
-                      <span className="text-[10px] text-slate-300 font-bold uppercase">pt</span>
-                    </div>
-                    <div className="mt-2">
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-500">
-                        {getBandBadgeText(interpretation.state.band)}
-                      </span>
+                  <div key={id} className="flex gap-4 p-3 border-b border-slate-50 items-start">
+                    <div className="shrink-0 mt-0.5">{AXIS_ICONS[id]}</div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-[13px] mb-1">[{interpretation.label}]</h4>
+                      <p className="text-[12px] text-slate-600 leading-relaxed">{interpretation.summary}</p>
                     </div>
                   </div>
                 );
@@ -171,90 +249,47 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
         </div>
 
-        <div className="flex-1">
-          {/* AI 전문가 자동 분석 섹션 (정상 노출) */}
-          {report.aiReportText && (
-            <div className="mb-10 no-print-break">
-              <h2 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-                AI 전문가 정밀 분석
-              </h2>
-              <div className="bg-white border-2 border-blue-100 p-8 rounded-3xl shadow-sm relative overflow-hidden">
-                <div className="relative z-10">
-                  <p className="text-slate-700 leading-relaxed font-medium whitespace-pre-wrap text-[15px]">
-                    {report.aiReportText}
-                  </p>
-                  <div className="mt-6 flex items-center gap-2 text-[10px] text-blue-400 font-bold uppercase tracking-wider">
-                    <div className="w-8 h-px bg-blue-100" />
-                    Generated by Assessment AI Engine
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <h2 className="text-lg font-bold text-slate-900 mb-6 bg-slate-100 px-4 py-2 rounded-r-full border-l-4 border-blue-600">
-            주요 발달 특성 요약
-          </h2>
-          <div className="space-y-4">
-            {AXIS_ORDER.map(id => {
-              const interpretation = report.sharedInterpretation?.axisInterpretations?.[id];
-              if (!interpretation) return null;
-              return (
-                <div key={id} className="flex gap-4 p-4 border-b border-slate-50 items-start">
-                  <div className="mt-1">{AXIS_ICONS[id]}</div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm mb-1">[{interpretation.label}]</h4>
-                    <p className="text-sm text-slate-600">{interpretation.summary}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <footer className="mt-auto pt-8 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono">
+        <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
           CONFIDENTIAL | PAGE 01
-        </footer>
+        </div>
       </section>
 
       {/* ──────────────────────────────────────────────────
-          PAGE 2: 상세 해석 및 가이던스
+          PAGE 2: 정밀 발달 해석 (Detailed Interpretation)
           ────────────────────────────────────────────────── */}
-      <section className="report-page bg-white shadow-xl min-h-[1100px] p-10 flex flex-col border border-slate-200 rounded-sm">
-        
-        <header className="border-b border-slate-200 pb-4 mb-8">
-          <h2 className="text-xl font-bold text-slate-900 leading-tight">정밀 발달 해석 및 솔루션</h2>
-          <p className="text-xs text-slate-400 uppercase tracking-widest mt-1 italic">Detailed Interpretation & Action Plan</p>
-        </header>
+      <section className="report-page">
+        <div className="report-header border-b border-slate-200 pb-4 mb-6">
+          <h2 className="text-2xl font-bold text-slate-900 leading-tight">정밀 발달 해석 및 솔루션</h2>
+          <p className="text-xs text-slate-400 uppercase tracking-widest mt-1 italic">Detailed Assessment of Developmental Axes</p>
+        </div>
 
-        <div className="space-y-8 mb-10">
+        <div className="report-content space-y-4">
           {AXIS_ORDER.map(id => {
             const interpretation = report.sharedInterpretation?.axisInterpretations?.[id];
             if (!interpretation) return null;
             return (
-              <div key={id} className="grid grid-cols-12 gap-4 border-b border-slate-50 pb-6">
-                <div className="col-span-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    {AXIS_ICONS[id]}
-                    <span className="font-bold text-slate-900">{interpretation.label}</span>
+              <div key={id} className="bg-slate-50/50 p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-center">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm scale-90">{AXIS_ICONS[id]}</div>
+                    <span className="font-bold text-slate-900 text-lg">{interpretation.label}</span>
                   </div>
-                  <div className="px-3 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-500 inline-block uppercase">
+                  <span className="px-4 py-1 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-500 uppercase tracking-wider shadow-sm">
                     {getBandBadgeText(interpretation.state.band)}
-                  </div>
+                  </span>
                 </div>
-                <div className="col-span-9 space-y-3">
-                  <div className="p-4 bg-slate-50/50 rounded-xl border-l-2 border-slate-200">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">현재 상태 (Summary)</p>
-                    <p className="text-sm text-slate-700 leading-relaxed font-semibold">{interpretation.summary}</p>
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-4 p-3 bg-white rounded-2xl border border-slate-50 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-tight">현재 상태</p>
+                    <p className="text-[12px] text-slate-800 font-bold leading-relaxed">{interpretation.summary}</p>
                   </div>
-                  <div className="p-4 bg-slate-50/50 rounded-xl border-l-2 border-slate-200">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">발현 원인 (Reason)</p>
-                    <p className="text-sm text-slate-700 leading-relaxed">{interpretation.reason}</p>
+                  <div className="col-span-4 p-3 bg-white rounded-2xl border border-slate-50 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-tight">발현 원인</p>
+                    <p className="text-[12px] text-slate-600 leading-relaxed">{interpretation.reason}</p>
                   </div>
-                  <div className="p-4 bg-blue-50/50 rounded-xl border-l-2 border-blue-200">
-                    <p className="text-xs font-bold text-blue-400 uppercase mb-1">지도 방향 (Action Point)</p>
-                    <p className="text-sm text-slate-700 leading-relaxed font-medium">{interpretation.action}</p>
+                  <div className="col-span-4 p-3 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm">
+                    <p className="text-[10px] font-bold text-blue-500 uppercase mb-1.5 tracking-tight">지도 방향</p>
+                    <p className="text-[12px] text-slate-800 font-bold leading-relaxed">{interpretation.action}</p>
                   </div>
                 </div>
               </div>
@@ -262,107 +297,308 @@ export default function ReportView({ report }: ReportViewProps) {
           })}
         </div>
 
-        <div className="grid grid-cols-2 gap-8 mb-10">
-          <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-            <h3 className="text-emerald-900 font-bold mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-              발달 강점 (Strengths)
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {(report.sharedInterpretation?.strengths?.length ?? 0) > 0 ? (
-                report.sharedInterpretation?.strengths?.map(id => (
-                  <span key={id} className="px-3 py-1 bg-white border border-emerald-200 text-emerald-700 text-xs font-bold rounded-lg shadow-sm">
-                    {report.sharedInterpretation?.axisInterpretations?.[id]?.label}
-                  </span>
-                ))
-              ) : (
-                <p className="text-xs text-emerald-600 italic">현재 특정 강점 영역을 단정하기보다 전반적인 발달 흐름을 함께 살펴보는 것이 적절합니다.</p>
-              )}
-            </div>
-          </div>
-          <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100">
-            <h3 className="text-rose-900 font-bold mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
-              우선 지원 (Needs)
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {(report.sharedInterpretation?.needs?.length ?? 0) > 0 ? (
-                report.sharedInterpretation?.needs?.map(id => (
-                  <span key={id} className="px-3 py-1 bg-white border border-rose-200 text-rose-700 text-xs font-bold rounded-lg shadow-sm">
-                    {report.sharedInterpretation?.axisInterpretations?.[id]?.label}
-                  </span>
-                ))
-              ) : (
-                <p className="text-xs text-rose-600 italic">현재 우선 지원이 필요한 특정 영역은 두드러지지 않습니다.</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 기질 특성 해석 섹션 (구조 복구 및 안전 접근) */}
-        {report.temperament && (
-          <div className="mb-10 space-y-6">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <div className="w-1 h-5 bg-blue-600" />
-              기질 특성 해석
-            </h2>
-            
-            <div className="bg-slate-50 border border-slate-200 p-8 rounded-2xl relative overflow-hidden">
-              <div className="mb-6">
-                <p className="text-blue-900 font-bold text-lg mb-2">{report.temperament.temperamentSummary}</p>
-                <div className="h-1 w-12 bg-blue-200 rounded-full" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">[기본 성향]</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">{report.temperament.temperamentSeed.mainStyle}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">[지원 방향]</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">{report.temperament.temperamentSeed.supportApproach}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">[주의 사항]</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">{report.temperament.temperamentSeed.cautionPoint}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-6">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <div className="w-1 h-5 bg-slate-900" />
-            생활 연계 솔루션
-          </h2>
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <h4 className="text-sm font-bold text-slate-400 mb-3 uppercase tracking-tighter">[가정에서의 노력]</h4>
-              <ul className="space-y-2">
-                {report.sharedInterpretation?.guidance?.home?.map((item, idx) => (
-                  <li key={idx} className="text-sm text-slate-600 pl-4 border-l-2 border-slate-100 leading-relaxed">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-400 mb-3 uppercase tracking-tighter">[기관/도장에서의 지도]</h4>
-              <ul className="space-y-2">
-                {report.sharedInterpretation?.guidance?.center?.map((item, idx) => (
-                  <li key={idx} className="text-sm text-slate-600 pl-4 border-l-2 border-slate-100 leading-relaxed">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <footer className="mt-auto pt-8 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono">
+        <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
           CONFIDENTIAL | PAGE 02
-        </footer>
+        </div>
+      </section>
+
+      {/* ──────────────────────────────────────────────────
+          PAGE 3: 강점, 기질 및 생활 솔루션
+          ────────────────────────────────────────────────── */}
+      <section className="report-page">
+        <div className="report-header border-b border-slate-200 pb-4 mb-8">
+          <h2 className="text-2xl font-bold text-slate-900 leading-tight">발달 솔루션 및 가이드</h2>
+          <p className="text-xs text-slate-400 uppercase tracking-widest mt-1 italic">Strengths, Temperament & Lifestyle Guidance</p>
+        </div>
+
+        <div className="report-content">
+          <div className="grid grid-cols-2 gap-8 mb-8">
+            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 shadow-sm">
+              <h3 className="text-emerald-900 font-bold mb-4 flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                발달 강점 (Strengths)
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {(report.sharedInterpretation?.strengths?.length ?? 0) > 0 ? (
+                  report.sharedInterpretation?.strengths?.map(id => (
+                    <span key={id} className="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 text-[12px] font-bold rounded-2xl shadow-sm">
+                      {report.sharedInterpretation?.axisInterpretations?.[id]?.label}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-[13px] text-emerald-700 italic">현재는 뚜렷한 강점으로 단정하기보다, 전반적인 발달 흐름을 균형 있게 살펴보는 단계입니다.</p>
+                )}
+              </div>
+            </div>
+            <div className="bg-rose-50 p-6 rounded-3xl border border-rose-100 shadow-sm">
+              <h3 className="text-rose-900 font-bold mb-4 flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-rose-500 rounded-full" />
+                우선 지원 영역 (Needs)
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {(report.sharedInterpretation?.needs?.length ?? 0) > 0 ? (
+                  report.sharedInterpretation?.needs?.map(id => (
+                    <span key={id} className="px-4 py-2 bg-white border border-rose-200 text-rose-700 text-[12px] font-bold rounded-2xl shadow-sm">
+                      {report.sharedInterpretation?.axisInterpretations?.[id]?.label}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-sm text-rose-600 italic">특정 영역의 지원 필요성은 두드러지지 않습니다.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {report.temperament && (
+            <div className="mb-10">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+                <div className="w-1 h-5 bg-blue-600" />
+                기질 특성 해석
+              </h2>
+              <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] relative overflow-hidden shadow-sm">
+                <div className="mb-6">
+                  <p className="text-blue-900 font-bold text-xl mb-3">{report.temperament.temperamentSummary}</p>
+                  <div className="h-1 w-20 bg-blue-200 rounded-full" />
+                </div>
+                <div className="grid grid-cols-3 gap-8">
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">[기본 성향]</p>
+                    <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{report.temperament.temperamentSeed.mainStyle}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">[지원 방향]</p>
+                    <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{report.temperament.temperamentSeed.supportApproach}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">[주의 사항]</p>
+                    <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{report.temperament.temperamentSeed.cautionPoint}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+              <div className="w-1 h-5 bg-slate-900" />
+              생활 연계 솔루션
+            </h2>
+            <div className="grid grid-cols-2 gap-8">
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                <h4 className="text-[11px] font-bold text-slate-400 mb-4 uppercase tracking-widest border-b border-slate-200 pb-2">[가정에서의 노력]</h4>
+                <ul className="space-y-4">
+                  {report.sharedInterpretation?.guidance?.home?.map((item, idx) => (
+                    <li key={idx} className="text-[13px] text-slate-700 pl-3 border-l-4 border-blue-200 leading-relaxed font-bold">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                <h4 className="text-[11px] font-bold text-slate-400 mb-4 uppercase tracking-widest border-b border-slate-200 pb-2">[기관/도장에서의 지도]</h4>
+                <ul className="space-y-4">
+                  {report.sharedInterpretation?.guidance?.center?.map((item, idx) => (
+                    <li key={idx} className="text-[13px] text-slate-700 pl-3 border-l-4 border-slate-300 leading-relaxed font-bold">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
+          CONFIDENTIAL | PAGE 03
+        </div>
+      </section>
+
+      {/* ──────────────────────────────────────────────────
+          PAGE 4: 태권도 수련 설계 제안 (Part 1)
+          ────────────────────────────────────────────────── */}
+      <section className="report-page">
+        <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
+          <div>
+            <div className="flex items-center gap-2 mb-2 text-blue-600">
+              <Zap className="w-5 h-5 fill-current" />
+              <span className="text-xs font-black tracking-widest uppercase">Expert Solution</span>
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">태권도 수련 설계 제안서</h1>
+          </div>
+          <div className="text-right text-sm text-slate-500">
+            <p className="font-bold text-slate-900">{childName} 아동</p>
+            <p>인성교육 · 줄넘기 · 체력운동</p>
+          </div>
+        </div>
+
+        <div className="report-content">
+          <div className="mb-6">
+            <div className="p-5 bg-blue-50 border border-blue-100 rounded-2xl">
+              <p className="text-[14px] text-slate-800 font-bold leading-relaxed">
+                {report.taekwondoRecommendation?.summary}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-5 flex-1 overflow-visible">
+            {programPageOne.map((program, idx) => (
+              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
+                  <h3 className="text-white font-bold text-base">{idx + 1}. {program.title}</h3>
+                  <Zap className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="p-5">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">왜 필요한가</p>
+                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.reason}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">어떻게 지도하는가</p>
+                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.application}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">수련 효과</p>
+                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.effect}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">지도 시 주의점</p>
+                      <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{program.caution}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
+          CONFIDENTIAL | PAGE 04
+        </div>
+      </section>
+
+      {/* ──────────────────────────────────────────────────
+          PAGE 5: 태권도 수련 설계 제안 (Part 2) & 상담 코멘트
+          ────────────────────────────────────────────────── */}
+      <section className="report-page">
+        <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
+          <div>
+            <div className="flex items-center gap-2 mb-2 text-blue-600">
+              <Zap className="w-5 h-5 fill-current" />
+              <span className="text-xs font-black tracking-widest uppercase">Expert Solution</span>
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">태권도 수련 설계 제안서</h1>
+          </div>
+          <div className="text-right text-sm text-slate-500">
+            <p className="font-bold text-slate-900">{childName} 아동</p>
+            <p>품새 · 겨루기 · 시범</p>
+          </div>
+        </div>
+
+        <div className="report-content">
+          <div className="space-y-5 mb-8 overflow-visible">
+            {programPageTwo.map((program, idx) => (
+              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
+                  <h3 className="text-white font-bold text-base">{idx + 4}. {program.title}</h3>
+                  <Zap className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="p-5">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">왜 필요한가</p>
+                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.reason}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">어떻게 지도하는가</p>
+                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.application}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">수련 효과</p>
+                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{program.effect}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">지도 시 주의점</p>
+                      <p className="text-[13px] text-slate-800 leading-relaxed font-bold">{program.caution}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {report.taekwondoRecommendation && report.taekwondoRecommendation.constraints.length > 0 && (
+            <div className="mb-6 p-5 bg-rose-50 border border-rose-100 rounded-3xl shrink-0">
+              <p className="text-[12px] font-bold text-rose-600 mb-3 uppercase tracking-widest flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                심화 수련 제한 및 안전 가이드
+              </p>
+              <ul className="grid grid-cols-2 gap-3">
+                {report.taekwondoRecommendation.constraints.map((c, idx) => (
+                  <li key={idx} className="text-[12px] text-rose-800 flex items-start gap-2 leading-relaxed font-bold">
+                    <div className="w-1.5 h-1.5 bg-rose-400 rounded-full mt-1.5 shrink-0" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
+          CONFIDENTIAL | PAGE 05
+        </div>
+      </section>
+
+      {/* ──────────────────────────────────────────────────
+          PAGE 6: 마무리 상담 코멘트
+          ────────────────────────────────────────────────── */}
+      <section className="report-page">
+        <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
+          <div>
+            <div className="flex items-center gap-2 mb-2 text-blue-600">
+              <Sparkles className="w-5 h-5 fill-current" />
+              <span className="text-xs font-black tracking-widest uppercase">Final Guidance</span>
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">마무리 상담 안내</h1>
+          </div>
+          <div className="text-right text-sm text-slate-500">
+            <p className="font-bold text-slate-900">{childName} 아동</p>
+          </div>
+        </div>
+
+        <div className="report-content flex flex-col justify-center">
+          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-20 -mt-20" />
+            <div className="relative">
+              <h4 className="text-xl font-bold mb-6 leading-relaxed">
+                " 아이의 마음을 먼저 읽어주는 태권도 수련, <br/> 
+                성장의 조급함보다 바른 발달을 위한 따뜻한 기다림이 필요합니다. "
+              </h4>
+              <div className="space-y-5">
+                <p className="text-[14px] leading-relaxed opacity-90 text-slate-300">
+                  본 수련 설계는 <strong className="text-white">{childName} 아동</strong>의 발달 흐름을 바탕으로 제안하는 맞춤형 안내입니다.
+                </p>
+                <div className="p-5 bg-white/10 rounded-2xl border border-white/10">
+                  <h5 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-widest">보호자 안내</h5>
+                  <p className="text-[13px] leading-relaxed text-slate-200">
+                    가정에서도 리포트에 제시된 '가정에서의 노력'을 함께 실천해 주시면, 도장에서의 수련 효과가 더욱 깊어집니다. 아이의 작은 변화와 시도를 아낌없이 칭찬해 주세요.
+                  </p>
+                </div>
+                <div className="p-5 bg-white/10 rounded-2xl border border-white/10">
+                  <h5 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-widest">기관/도장 상담 마무리</h5>
+                  <p className="text-[13px] leading-relaxed text-slate-200">
+                    아이의 기질과 현재의 마음 상태를 세심하게 살피며, 도장에서 가장 즐겁게 성장할 수 있도록 유연하게 수련을 조정해 나가겠습니다. 궁금하신 점은 언제든 관장님께 문의해 주세요.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
+          CONFIDENTIAL | PAGE 06
+        </div>
       </section>
     </div>
   );

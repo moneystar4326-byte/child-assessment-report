@@ -33,59 +33,69 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '1mb' }));
 
-// ── 확정된 System Prompt ──────────────────────────────────────────
-const SYSTEM_PROMPT = `## Role
-당신은 아동 발달 리포트 시스템의 '데이터-문장 변환 보조 엔진'입니다. 당신의 단독 판단은 허용되지 않으며, 제공된 JSON 데이터의 판정 결과를 보호자가 이해하기 쉬운 문장으로 정리하는 작업만 수행하십시오.
+// ── [수정] AI 역할 최소화 및 금지 표현 강화 ──────────────────────────
+const SYSTEM_PROMPT = `당신은 아동 발달 리포트의 문법과 흐름을 다듬는 '문장 교정 엔진(Copyeditor)'입니다.
+당신은 새로운 의미를 생성하거나 아동의 상태를 평가해서는 안 됩니다.
 
-## Immutable Principles
-1. [SSOT 준수]: 모든 수치, 등급(judgmentLabel), 분석 결과는 JSON 데이터와 100% 일치해야 합니다.
-2. [해석 금지]: 낮은 점수를 긍정적으로 재해석하거나, 데이터에 없는 행동 양상을 추론하지 마십시오.
-3. [강점 처리]: strengthAxes가 비어있는 경우, 존재하지 않는 강점을 지어내지 마십시오. 대신 비교적 무난한 영역(양호 지표)을 찾아 발달 유지를 위한 격려 위주로 서술하십시오.
-4. [위험 가드레일]: 'mustAvoidPositiveRewriteAxes'로 지정된 영역은 반드시 코드의 경고 의도와 일치하는 단호한 상담톤을 유지하십시오.
-5. [지칭 통일]: 보호자를 지칭할 때는 '보호자님'으로 통일하거나 지칭을 생략하십시오.
+## 1. 역할 한정 (Strict Scope)
+- 오직 맞춤법, 띄어쓰기, 문장 간 연결성만 개선하십시오.
+- 제공된 원본 데이터의 '사실'과 '어조'를 절대 바꾸지 마십시오.
 
-## Forbidden Keywords
-- "완치", "정상입니다", "병", "진단", "치료", "확신합니다"`;
+## 2. 금지 단어 및 대체 가이드 (Forbidden & Replace)
+아래 단어를 절대 사용하지 마십시오. 만약 원본에 있더라도 다음의 중립 단어로 교체하십시오.
+- '양호, 안정적, 우수, 탁월' → (대체) '고른, 지속적인, 객관적인, 현재의'
+- '불안정, 문제 있음, 위험, 긴급, 시급, 심각' → (대체) '기복이 있는, 개별적 도움이 필요한, 점진적인 관찰이 필요한'
+- '권장합니다, 필요합니다, 추천합니다' → (대체) '도움이 됩니다, 시도해 볼 수 있습니다, 준비하고 있습니다'
+- '강점, 탁월한, 반드시 필요' -> (대체) '긍정적 지표', '활용 가능한 영역', '지원이 도움이 됨'
+- '모든 영역' -> (대체) '다양한 역량', '다수의 분야'
+- 모든 문장은 '~습니다', '~입니다'로 끝내십시오.
+- 문장을 지어내지 말고, 이미 있는 문장들을 자연스럽게 '연결'만 하십시오.`;
 
 // ── POST /api/generate ─────────────────────────────────────────
 app.post('/api/generate', async (req, res) => {
   console.log('[DEBUG_SERVER_RECV] Keys:', Object.keys(req.body));
   
   try {
-    const { childInfo, scores, observationMemo } = req.body;
+    const { childInfo, scores, observationMemo, report } = req.body;
 
-    if (!childInfo || !scores) {
-      return res.status(400).json({ error: 'childInfo and scores are required' });
+    if (!childInfo || !scores || !report) {
+      console.warn("[AI_PAYLOAD_INVALID] Missing requirements:", { childInfo, scores, hasReport: !!report });
+      return res.status(200).json({ 
+        success: false, 
+        usedAI: false,
+        error: "Required fields are missing",
+        fallbackText: report?.sharedInterpretation?.overallSummary || "기본 리포트를 확인해 주세요."
+      });
     }
 
-    // [STEP_1] Payload 조립 시작
-    console.log('[STEP_1] before assembleReportPayloadV3');
-    const payload = assembleReportPayloadV3(childInfo, scores, observationMemo || "");
-    console.log('[STEP_2] payload build success');
-
-    // [테스트 시 설정] true로 바꾸면 OpenAI 호출 없이 Payload만 반환하여 500 원인 파악 가능
-    const BYPASS_OPENAI = false; 
-
-    if (BYPASS_OPENAI) {
-      console.log('[STEP_BYPASS] Skipping OpenAI call');
-      return res.json({ success: true, reportText: "BYPASS_MODE: Payload Verified", payloadUsed: payload });
-    }
-
-    // 2. User Prompt 생성
+    // [STEP_1] 기초 텍스트 준비
+    const baseSummary = report.sharedInterpretation.overallSummary || "";
+    const memoText = report.sharedInterpretation.memoReflection?.summary || "";
+    
+    // 2. User Prompt 생성 (Smoothing Only)
     const userPrompt = `
-[데이터 입력]
-${JSON.stringify(payload, null, 2)}
+다음은 아동 발달 리포트 초안입니다. 의미를 훼손하지 않고 문장만 자연스럽게 교정하십시오.
 
-[작성 지침]
-위의 데이터를 바탕으로 다음 세 단락을 작성하십시오. Markdown 형식이 아닌, 아래 명칭으로 시작하는 일반 텍스트 섹션으로 응답하십시오.
+[원본 요약]
+${baseSummary}
 
-1. 종합 보고 요약: summaryKey 시그널에 맞춰 전체적인 발달 현황을 한 문장으로 요약하십시오.
-2. 주요 발달 특성 및 강점: strengthAxes에 있는 영역을 우선 서술하십시오. 강점이 없다면 양호한 영역을 중심으로 현 상태를 보고하십시오.
-3. 지원 및 보완 방향: prioritySupportAxisIds 및 severeLowAxes를 참고하여, 보완이 시급한 영역과 구체적인 솔루션을 데이터 기반으로 제시하십시오.
+[원본 메모 반영]
+${memoText}
+
+[교정 지침]
+- 각 섹션의 내용을 부드럽게 다듬으십시오.
+- '긴급', '시급', '문제 있음', '모든 영역', '심각', '반드시 필요' 단어를 절대 사용하지 마십시오.
+- 다른 조언을 추가하지 마십시오.
+- 아래 형식을 엄격히 유지하여 응답하십시오:
+
+:::SUMMARY:::
+(교정된 요약 텍스트)
+:::MEMO:::
+(교정된 메모 텍스트)
 `;
 
     // [STEP_3] OpenAI 호출 시작
-    console.log(`[OPENAI_REQUEST_START] Model: ${MODEL_NAME}, Child: ${payload.metadata.childName}`);
+    console.log(`[OPENAI_REQUEST_START] Smoothing for: ${childInfo.name}`);
     
     const completion = await openai.chat.completions.create({
       model: MODEL_NAME,
@@ -93,17 +103,24 @@ ${JSON.stringify(payload, null, 2)}
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: userPrompt },
       ],
-      temperature: 0.2,
+      temperature: 0,
       max_tokens: 2000,
     });
 
-    const aiResponse = completion.choices[0]?.message?.content ?? "";
-    console.log('[OPENAI_REQUEST_SUCCESS] Response length:', aiResponse.length);
+    const aiRawResponse = completion.choices[0]?.message?.content ?? "";
+    console.log('[OPENAI_REQUEST_SUCCESS] Response received.');
+
+    // 단순 파싱
+    const summaryMatch = aiRawResponse.match(/:::SUMMARY:::([\s\S]*?)(?=:::MEMO:::|$)/);
+    const memoMatch = aiRawResponse.match(/:::MEMO:::([\s\S]*$)/);
+
+    const smoothedSummary = summaryMatch ? summaryMatch[1].trim() : baseSummary;
+    const smoothedMemo = memoMatch ? memoMatch[1].trim() : memoText;
 
     res.json({
       success: true,
-      reportText: aiResponse,
-      payloadUsed: payload
+      reportText: smoothedSummary,
+      memoText: smoothedMemo,
     });
 
   } catch (error: any) {

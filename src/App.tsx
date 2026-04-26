@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Clipboard, Printer, RotateCcw, ChevronLeft, FileText, User, ListChecks, MessageSquare, Sparkles } from 'lucide-react';
+import { Clipboard, Printer, RotateCcw, ChevronLeft, FileText, User, ListChecks, MessageSquare, Sparkles, Zap, Check } from 'lucide-react';
 import type { ChildInfo, AssessmentScores, ReportResult } from './types';
 import { generateReport } from './services/reportService';
 
@@ -35,6 +35,8 @@ export default function App() {
   const [memo, setMemo] = useState('');
   const [report, setReport] = useState<ReportResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const [skipAI, setSkipAI] = useState(false);
   const [selectedSampleKey, setSelectedSampleKey] = useState<string | null>(null);
   const hasRunDiagnostics = useRef(false);
 
@@ -84,17 +86,24 @@ export default function App() {
 
   const handleGenerateReport = async () => {
     setIsGenerating(true);
+    setLoadingStep(0);
+    
+    const interval = setInterval(() => {
+      setLoadingStep(prev => (prev < 3 ? prev + 1 : prev));
+    }, 2000);
     
     try {
-      const result = await generateReport({ childInfo, scores, observationMemo: memo });
+      const result = await generateReport({ childInfo, scores, observationMemo: memo, skipAI });
       setReport(result);
       setStep('result'); // 성공 시에만 화면 전환
     } catch (error) {
       console.error('[GENERATE_FAIL]', error);
       alert('리포트 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
-      // setStep('memo'); // 이미 memo 단계이므로 별도 처리 불필요
+      // 에러 발생 시 isGenerating이 false가 되며 기존 화면(memo)에 남음
     } finally {
+      clearInterval(interval);
       setIsGenerating(false);
+      console.log("[LOADING_FINALLY_FALSE]");
     }
   };
 
@@ -213,50 +222,53 @@ export default function App() {
             )}
             
             {step === 'memo' && (
-              <MemoForm 
-                memo={memo} 
-                onChange={setMemo} 
-                onNext={handleNext} 
-                onBack={handleBack} 
-              />
+              <div className="flex-1 flex flex-col">
+                <MemoForm 
+                  memo={memo} 
+                  onChange={setMemo} 
+                  onNext={handleNext} 
+                  onBack={handleBack} 
+                  isGenerating={isGenerating}
+                />
+                <div className="mt-4 flex items-center justify-center gap-2 text-slate-400 no-print">
+                  <input 
+                    type="checkbox" 
+                    id="pureCode" 
+                    checked={skipAI} 
+                    onChange={(e) => setSkipAI(e.target.checked)} 
+                    className="w-4 h-4 rounded border-slate-300 text-navy-900 focus:ring-navy-900"
+                  />
+                  <label htmlFor="pureCode" className="text-xs font-medium cursor-pointer flex items-center gap-1">
+                    <Zap className="w-3 h-3" />
+                    AI 문장 다듬기 건너뛰기 (Pure Code Mode)
+                  </label>
+                </div>
+              </div>
             )}
             
             {step === 'result' && (
               <div className="flex-1 flex flex-col">
-                {isGenerating ? (
-                  <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
-                    <div className="relative mb-8">
-                      <div className="w-24 h-24 border-4 border-slate-100 border-t-navy-900 rounded-full animate-spin" />
-                      <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gold-500 w-8 h-8 animate-pulse" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-navy-900 mb-4 animate-pulse">
-                      AI 전문가가 발달 지표를 정밀 분석 중입니다...
-                    </h3>
-                    <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
-                      아이의 발달 특성과 관찰 메모를 종합하여<br />
-                      전문적인 솔루션 리포트를 작성하고 있습니다. (약 5~10초 소요)
-                    </p>
-                  </div>
-                ) : report ? (
+                {report ? (
                   <div className="flex-1 flex flex-col py-8 print:py-0">
-                    {/* Actions Header */}
-                    <div className="flex flex-wrap justify-between items-center gap-4 mb-8 no-print">
-                      <button onClick={handleBack} className="btn-outline flex items-center gap-2">
-                        <ChevronLeft className="w-4 h-4" />
-                        수정하기
-                      </button>
-                      <div className="flex gap-2">
-                        <button onClick={handleCopy} className="btn-outline flex items-center gap-2">
-                          <Clipboard className="w-4 h-4" />
-                          내용 복사하기
-                        </button>
-                        <button onClick={handlePrint} className="btn-primary flex items-center gap-2">
-                          <Printer className="w-4 h-4" />
-                          인쇄 / PDF 저장
-                        </button>
-                        <button onClick={() => setStep('welcome')} className="btn-outline text-red-500 border-red-100 hover:bg-red-50 flex items-center gap-2">
+                    {/* Premium Actions Header */}
+                    <div className="flex flex-wrap justify-between items-center gap-4 mb-8 p-6 bg-navy-900 rounded-3xl no-print shadow-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-gold-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-white font-bold">리포트 생성이 완료되었습니다</h3>
+                          <p className="text-slate-400 text-xs mt-0.5">아래 버튼을 눌러 A4 규격의 PDF로 저장하거나 인쇄할 수 있습니다.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <button onClick={handleBack} className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2">
                           <RotateCcw className="w-4 h-4" />
-                          처음으로
+                          다시 작성하기
+                        </button>
+                        <button onClick={handlePrint} className="px-6 py-2.5 bg-gold-600 hover:bg-gold-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-gold-900/20 transition-all flex items-center gap-2">
+                          <Printer className="w-4 h-4" />
+                          PDF 저장하기
                         </button>
                       </div>
                     </div>
@@ -273,6 +285,35 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Loading Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-navy-900/60 z-[100] flex items-center justify-center p-6 backdrop-blur-md">
+          <div className="bg-white rounded-[2rem] max-w-md w-full p-10 text-center shadow-2xl">
+            <div className="relative mb-8 mx-auto w-20 h-20">
+              <div className="w-20 h-20 border-4 border-slate-100 border-t-gold-500 rounded-full animate-spin" />
+              <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-navy-900 w-8 h-8 animate-pulse" />
+            </div>
+            <h3 className="text-xl font-bold text-navy-900 mb-3">
+              아이의 발달 흐름을 분석하고 있습니다
+            </h3>
+            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+              입력해주신 점수와 보호자 관찰 메모를 바탕으로<br/>상담 리포트를 구성하는 중입니다.
+            </p>
+            
+            <div className="space-y-4 text-left px-8">
+              {['발달 지표를 정리하고 있어요', '보호자 관찰 메모를 반영하고 있어요', '맞춤형 수련 방향을 설계하고 있어요', '상담용 리포트를 완성하고 있어요'].map((text, idx) => (
+                <div key={idx} className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= idx ? 'opacity-100' : 'opacity-30'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep > idx ? 'bg-emerald-500 text-white' : loadingStep === idx ? 'bg-gold-500 text-white animate-pulse' : 'bg-slate-100 text-slate-400'}`}>
+                    {loadingStep > idx ? <Check className="w-3 h-3" /> : <div className="w-2 h-2 rounded-full bg-current" />}
+                  </div>
+                  <span className={`text-sm font-semibold ${loadingStep >= idx ? 'text-navy-900' : 'text-slate-400'}`}>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="py-6 px-6 text-center text-slate-400 text-xs no-print">
