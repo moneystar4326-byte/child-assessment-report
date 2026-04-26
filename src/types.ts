@@ -38,15 +38,53 @@ export interface TaekwondoRecommendation {
 }
 
 export interface ReportResult {
-  childName: string;
-  age: string;
-  counselorName: string;
+  childInfo: ChildInfo & { ageGroup: string };
+  rawScores: AssessmentScores;
+  scoredAxes: {
+    id: AxisId;
+    label: string;
+    score: number;
+    band: Band;
+    state: AxisState;
+  }[];
+  observationMemo: string;
+  memoAnalysis: {
+    summary: string;
+    matchedKeywords: string[];
+    relatedAxes: AxisId[];
+  };
+  page01: {
+    radarChartData: any[];
+    summary: string;
+  };
+  page02: {
+    interpretations: Record<AxisId, {
+      summary: string;
+      reason: string;
+      action: string;
+    }>;
+  };
+  taekwondoProgram: {
+    page03: {
+      recommendations: string[];
+      summary: string;
+    };
+    page04: {
+      detailedPrograms: TaekwondoProgramDetail[];
+    };
+    safetyGuide: string[];
+  };
+  page05: {
+    homeGuidance: string[];
+    centerGuidance: string[];
+  };
+  
+  // compatibility with old view if needed (optional)
+  sharedInterpretation: SharedInterpretation;
   axisScores: Record<AxisId, number>;
   bands: Record<AxisId, Band>;
   states: Record<AxisId, AxisState>;
-  sharedInterpretation: SharedInterpretation;
-  radarChartData: any[]; 
-  temperament?: TemperamentResult;
+  radarChartData: any[];
   taekwondoRecommendation?: TaekwondoRecommendation;
   aiReportText?: string;
   aiTaekwondoText?: string;

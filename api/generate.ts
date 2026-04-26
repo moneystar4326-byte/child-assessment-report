@@ -38,6 +38,8 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { childInfo, report, observationMemo, scores } = req.body;
+    console.log("[SERVER_INPUT_BODY]", JSON.stringify(req.body, null, 2));
+    console.log("[SERVER_SCORES_CHECK]", scores);
 
     // 1. [Security] 인증 토큰 검증 (임시 비활성화)
     /*
@@ -59,11 +61,10 @@ export default async function handler(req: any, res: any) {
     */
 
     if (!childInfo || !scores) {
-      console.warn("[AI_PAYLOAD_INVALID] Missing requirements:", { childInfo, scores });
-      return res.status(200).json({ 
+      console.error("[SERVER_ERROR] Missing childInfo or scores. Do not generate fallback.");
+      return res.status(400).json({ 
         success: false, 
-        reportText: report?.sharedInterpretation?.overallSummary || "기본 리포트를 확인해 주세요.",
-        error: "childInfo and scores are required"
+        error: "Scores and childInfo are required. Fallback 50 is strictly prohibited."
       });
     }
 
@@ -102,96 +103,64 @@ export default async function handler(req: any, res: any) {
 
     const fallbackText = report.sharedInterpretation?.overallSummary || "리포트 분석 데이터를 확인해 주세요.";
 
-    const SYSTEM_PROMPT = `당신은 아동 발달 리포트의 문법과 흐름을 다듬는 '문장 편집 전문가(Copy Editor)'입니다.
-절대 새로운 판단을 하지 말고, 이미 코드에서 결정된 결과를 부모 상담용 문장으로 상세히 풀어 설명하는 역할만 수행합니다.
-
-## [절대 규칙]
-1. 입력 데이터를 변경하거나 새로운 판단을 하지 마십시오.
-2. 낮은 점수를 긍정적으로 포장하지 마십시오. ("성장", "가능성", "기대됩니다" 등 모호한 표현 사용 금지)
-3. 제한 규칙을 절대 엄수하십시오:
-   - 감정조절 39점 이하: 자유 겨루기 추천 금지
-   - 자기조절 39점 이하: 자유 겨루기 추천 금지
-   - 집중력 39점 이하: 품새 전체 수행 추천 금지
-   - 도전성 39점 이하: 고난도 과제 추천 금지
-4. 모든 문장은 부모님이 이해하기 쉬운 상담 문장으로, 각 항목당 2~4문장 이상 상세히 작성하십시오.
-
-## [출력 형식]
-반드시 아래 형식을 엄수하십시오:
-:::SUMMARY:::
-[교정된 전체 요약 텍스트]
-:::MEMO:::
-[교정된 메모 반영 텍스트]
-:::TAEKWONDO:::
-[태권도 프로그램 추천]
-
-${maskedChildName} 아동은 현재 {우선 지원 영역}에서 도움이 필요한 상태입니다.
-따라서 수업 초반에는 {위험 활동}보다 {안전한 활동}을 중심으로 구성하는 것이 적절합니다.
-
-1. 인성교육
-- 왜 필요한가: 아동의 감정조절, 사회성, 자기표현 지표와 연결하여 설명
-- 어떻게 지도하는가: 오늘의 약속 확인, 감정 표현 문장 연습, 차례 기다리기, 규칙 확인 등 구체적으로 설명
-- 수련 효과: 말로 표현하기, 규칙 이해, 친구와의 상호작용 안정화
-- 주의점: 비난하지 않고 짧고 분명하게 안내
-
-2. 줄넘기
-- 왜 필요한가: 집중력과 도전성 지표와 연결하여 설명
-- 어떻게 지도하는가: 1개, 3개, 5개처럼 작은 성공 목표부터 시작
-- 수련 효과: 재도전, 집중 유지, 성취감
-- 주의점: 개수 경쟁보다 다시 시도한 태도를 칭찬
-
-3. 체력운동
-- 왜 필요한가: 자기조절과 감정조절 지표와 연결하여 설명
-- 어떻게 지도하는가: 제자리 뛰기, 점프, 버티기, 시작-멈춤 훈련
-- 수련 효과: 신호 반응, 몸 조절, 충동 조절
-- 주의점: 운동 강도보다 멈춤 신호 반응을 우선
-
-4. 품새
-- 왜 필요한가: 집중력과 자기조절 지표와 연결하여 설명
-- 어떻게 지도하는가: 1동작, 3동작, 짧은 구간 반복 (저점 아동에게 전체 수행 요구 금지)
-- 수련 효과: 순서 기억, 지시 따르기, 집중 유지
-- 주의점: 집중력 저점 아동에게 전체 품새 수행을 요구하지 않음
-
-5. 겨루기
-- 왜 필요한가: 사회성, 자기조절, 감정조절 지표와 연결하여 설명
-- 어떻게 지도하는가: 미트 발차기, 한 번 차고 멈추기, 약속 겨루기 (저점 아동에게 자유 겨루기 금지)
-- 수련 효과: 규칙 속 상호작용, 차례 지키기, 거리 조절
-- 주의점: 감정조절 또는 자기조절 저점 아동에게 자유 겨루기 금지`;
-
-    const age = parseInt(childInfo.age, 10);
-    let ageGroup = "";
-    if (age <= 6) ageGroup = "유아기(만 5~6세)";
-    else if (age <= 8) ageGroup = "초등 저학년(만 7~8세)";
-    else if (age <= 10) ageGroup = "초등 중학년(만 9~10세)";
-    else ageGroup = "고학년 및 청소년(만 11~13세)";
+    const SYSTEM_PROMPT = `당신은 아동발달 리포트의 판단자가 아니라 문장 편집자입니다.
+점수, 구간, 강점, 지원 필요 영역, 태권도 프로그램 추천은 이미 코드가 확정했습니다.
+당신은 어떤 경우에도 점수와 구간을 변경할 수 없습니다.
+당신은 새로운 강점이나 새로운 문제를 만들어낼 수 없습니다.
+당신은 태권도 프로그램을 새로 추천할 수 없습니다.
+당신은 observationMemo 필드에 다른 섹션의 내용을 넣을 수 없습니다.
+당신은 제공된 JSON 구조를 유지해야 합니다.
+저점 영역에는 ‘안정적’, ‘우수’, ‘강점’, ‘문제 없음’, ‘탁월’, ‘균형적’ 같은 긍정 단정 표현을 사용할 수 없습니다.
+특히 supportNeeded 영역은 반드시 지원과 연습이 필요한 표현으로 유지해야 합니다.
+출력은 반드시 유효한 JSON으로만 반환하세요.`;
 
     const userPrompt = `
-다음 데이터를 바탕으로 문장을 교정하고 상세화하십시오.
+아래 JSON은 코드가 이미 판단한 확정 리포트 초안입니다.
+당신의 역할은 문장을 보호자 상담용으로 자연스럽게 다듬는 것입니다.
 
-[아동 정보]
-대상: ${maskedChildName}
-나이: 만 ${age}세 (${ageGroup})
-기관: ${maskedAcademyName}
-상담자: ${maskedCounselorName}
+절대 변경 금지:
+1. score
+2. band
+3. label
+4. strengths
+5. needs
+6. recommendedPrograms
+7. safetyGuide
+8. page structure
+9. observationMemo 원본 의미
 
-[발달 데이터 요약]
-${fixedReportText}
+금지:
+1. 점수를 50점으로 바꾸지 마세요.
+2. ‘관찰 필요’로 임의 변경하지 마세요.
+3. 지원 필요 영역을 강점처럼 표현하지 마세요.
+4. 보호자 메모 칸에 태권도 프로그램 설명을 넣지 마세요.
+5. 태권도 프로그램을 새로 작성하지 마세요.
+6. 자유 겨루기, 터치 겨루기, 고난도 시범 등 안전상 위험한 활동을 임의로 추가하지 마세요.
+7. JSON 키를 추가하거나 삭제하지 마세요.
 
-[태권도 프로그램 추천 기초 데이터]
-- 코드 추천 프로그램 목록: ${report.taekwondoRecommendation?.programs.join(", ")}
-- 우선 지원 영역: ${report.sharedInterpretation?.needs.map((id: any) => report.sharedInterpretation?.axisInterpretations?.[id]?.label).join(", ")}
-- 제한사항 및 주의사항: ${report.taekwondoRecommendation?.constraints.join(", ")}
-- 지도지침: ${report.taekwondoRecommendation?.teachingGuidance.join(", ")}
-- 추천 요약: ${report.taekwondoRecommendation?.summary}
+해야 할 일:
+1. 문장 흐름만 자연스럽게 다듬기
+2. 보호자에게 전달하기 좋은 부드러운 표현으로 정리하기
+3. 코드가 정한 판단을 그대로 유지하기
+4. 저점 아동에게는 조심스럽고 안전한 지도 표현 사용하기
 
-[교정 지침]
-- 아동의 실제 이름 대신 반드시 '${maskedChildName}'라는 표현을 사용하십시오.
-- 위 1~5번 프로그램 섹션을 반드시 포함하여 작성하십시오.
-- 아동의 연령(${age}세, ${ageGroup})에 맞는 단어 선택과 수련 난이도를 반영하십시오.
-- 각 섹션의 '왜 필요한가', '어떻게 지도하는가', '수련 효과', '주의점'을 [발달 데이터 요약]의 점수와 등급에 맞춰 부모님께 설명하듯 상세히(항목별 2~4문장) 작성하십시오.
-- 코드에서 결정한 '제한사항' 및 '주의사항'은 절대 완화하거나 생략하지 마십시오.
-- ':::SUMMARY:::', ':::MEMO:::', ':::TAEKWONDO:::' 태그를 사용하십시오.
+입력 JSON:
+${JSON.stringify({
+  childInfo: {
+    name: maskedChildName,
+    age: childInfo.age,
+    ageGroup: report.childInfo?.ageGroup || ""
+  },
+  scores: scores,
+  observationMemo: observationMemo,
+  report: report
+}, null, 2)}
+
+출력:
+동일한 JSON 구조로 반환하세요.
 `;
 
+    const age = parseInt(childInfo.age, 10);
 
     // 2. OpenAI 호출
     const completion = await openai.chat.completions.create({
@@ -204,25 +173,30 @@ ${fixedReportText}
       max_tokens: 2000,
     });
 
-    let aiRawResponse = completion.choices[0]?.message?.content ?? "";
+    const aiResponse = completion.choices[0]?.message?.content ?? "";
     console.log('[OPENAI_REQUEST_SUCCESS] Response received.');
 
-    // 단순 파싱
-    const summaryMatch = aiRawResponse.match(/:::SUMMARY:::([\s\S]*?)(?=:::MEMO:::|:::TAEKWONDO:::|$)/);
-    const memoMatch = aiRawResponse.match(/:::MEMO:::([\s\S]*?)(?=:::TAEKWONDO:::|$)/);
-    const taekwondoMatch = aiRawResponse.match(/:::TAEKWONDO:::([\s\S]*$)/);
+    let finalReport;
+    try {
+      finalReport = JSON.parse(aiResponse.replace(/```json|```/g, ''));
+    } catch (e) {
+      console.warn("[AI_JSON_PARSE_FAILED] Falling back to base report.");
+      finalReport = { report };
+    }
 
-    const smoothedSummary = summaryMatch ? summaryMatch[1].trim() : fallbackText;
-    const smoothedMemo = memoMatch ? memoMatch[1].trim() : report.sharedInterpretation.memoReflection?.summary || "";
-    const smoothedTaekwondo = taekwondoMatch ? taekwondoMatch[1].trim() : "";
+    const smoothedSummary = finalReport.report?.sharedInterpretation?.overallSummary || report.sharedInterpretation?.overallSummary;
+    const smoothedMemo = finalReport.report?.sharedInterpretation?.memoReflection?.summary || report.sharedInterpretation?.memoReflection?.summary;
+    const smoothedTaekwondo = finalReport.report?.aiTaekwondoText || ""; 
 
-    res.status(200).json({
+    const finalResponse = {
       success: true,
       reportText: smoothedSummary,
       memoText: smoothedMemo,
       taekwondoText: smoothedTaekwondo,
       isValid: true
-    });
+    };
+    console.log("[SERVER_FINAL_REPORT]", JSON.stringify(finalResponse, null, 2));
+    res.status(200).json(finalResponse);
 
   } catch (error: any) {
     console.error('[API_GENERATE_FAILED_LOG]', error.message);
