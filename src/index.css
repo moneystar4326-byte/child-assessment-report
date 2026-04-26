@@ -69,14 +69,14 @@
 
     .report-page {
       width: 210mm !important;
-      height: 297mm !important;
       min-height: 297mm !important;
+      height: auto !important;
       padding: 15mm !important;
       margin: 0 !important;
       box-sizing: border-box !important;
-      page-break-after: always !important;
-      break-after: page !important;
-      overflow: hidden !important;
+      page-break-after: always;
+      break-after: page;
+      overflow: visible !important;
       background: white !important;
       border: none !important;
       box-shadow: none !important;
@@ -84,6 +84,13 @@
       position: relative !important;
       display: flex !important;
       flex-direction: column !important;
+    }
+
+    .report-footer {
+      position: relative !important;
+      margin-top: auto !important;
+      padding-top: 10px !important;
+      flex-shrink: 0 !important;
     }
 
   .report-page:last-child {
@@ -129,15 +136,15 @@
 
   .report-page {
     width: 210mm;
-    height: 297mm;
     min-height: 297mm;
+    height: auto;
     margin: 0 auto 40px auto;
     padding: 15mm;
     box-sizing: border-box;
     background: white;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
@@ -167,11 +174,35 @@
 
 .report-content {
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
 
 .report-footer {
   flex-shrink: 0;
+  position: relative;
+}
+
+/* 추가적인 잘림 방지 규칙 */
+@media print {
+  .report-card,
+  .section-card,
+  .axis-card,
+  .program-card,
+  .solution-card,
+  .summary-card,
+  section,
+  div.card {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  p, div, h1, h2, h3, h4, h5, li {
+    overflow: visible !important;
+    break-inside: auto;
+  }
 }

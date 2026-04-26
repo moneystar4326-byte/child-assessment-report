@@ -208,7 +208,7 @@ export default function ReportView({ report }: ReportViewProps) {
                   if (!interpretation) return null;
                   const scoreColor = getStateColor(interpretation.state.state);
                   return (
-                    <div key={id} className="bg-white border border-slate-50 p-4 rounded-2xl shadow-sm relative overflow-hidden">
+                    <div key={id} className="bg-white border border-slate-50 p-4 rounded-2xl shadow-sm relative overflow-visible">
                       <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: scoreColor }} />
                       <p className="text-[11px] font-bold text-slate-400 uppercase mb-1 tracking-tight">{interpretation.label}</p>
                       <div className="flex items-baseline gap-1">
@@ -355,7 +355,7 @@ export default function ReportView({ report }: ReportViewProps) {
                 <div className="w-1 h-5 bg-blue-600" />
                 기질 특성 해석
               </h2>
-              <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] relative overflow-hidden shadow-sm">
+              <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] relative overflow-visible shadow-sm">
                 <div className="mb-6">
                   <p className="text-blue-900 font-bold text-xl mb-3">{report.temperament.temperamentSummary}</p>
                   <div className="h-1 w-20 bg-blue-200 rounded-full" />
@@ -442,7 +442,7 @@ export default function ReportView({ report }: ReportViewProps) {
 
           <div className="space-y-5 flex-1 overflow-visible">
             {programPageOne.map((program, idx) => (
-              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-visible shadow-sm">
                 <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
                   <h3 className="text-white font-bold text-base">{idx + 1}. {program.title}</h3>
                   <Zap className="w-4 h-4 text-amber-400" />
@@ -498,7 +498,7 @@ export default function ReportView({ report }: ReportViewProps) {
         <div className="report-content">
           <div className="space-y-5 mb-8 overflow-visible">
             {programPageTwo.map((program, idx) => (
-              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              <div key={idx} className="bg-white border border-slate-200 rounded-3xl overflow-visible shadow-sm">
                 <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
                   <h3 className="text-white font-bold text-base">{idx + 4}. {program.title}</h3>
                   <Zap className="w-4 h-4 text-amber-400" />
@@ -568,7 +568,7 @@ export default function ReportView({ report }: ReportViewProps) {
         </div>
 
         <div className="report-content flex flex-col justify-center">
-          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-hidden shadow-2xl">
+          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-visible shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-20 -mt-20" />
             <div className="relative">
               <h4 className="text-xl font-bold mb-6 leading-relaxed">
