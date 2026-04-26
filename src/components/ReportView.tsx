@@ -350,7 +350,7 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
 
           {report.temperament && (
-            <div className="mb-10">
+            <div className="mb-6">
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
                 <div className="w-1 h-5 bg-blue-600" />
                 기질 특성 해석
@@ -553,7 +553,7 @@ export default function ReportView({ report }: ReportViewProps) {
       {/* ──────────────────────────────────────────────────
           PAGE 6: 마무리 상담 코멘트
           ────────────────────────────────────────────────── */}
-      <section className="report-page">
+      <section className="report-page last-page">
         <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
           <div>
             <div className="flex items-center gap-2 mb-2 text-blue-600">

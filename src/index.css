@@ -206,3 +206,70 @@
     break-inside: auto;
   }
 }
+
+/* User specified print stabilization overrides */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body,
+  #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .report-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .report-page {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 15mm !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .report-page:last-child,
+  .report-page:last-of-type {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .report-card,
+  .summary-card,
+  .axis-card,
+  .program-card,
+  .solution-card,
+  .section-card {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .page-footer,
+  .confidential-footer,
+  .report-footer {
+    position: static !important;
+    margin-top: 5mm !important;
+  }
+
+  .last-page {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+}
