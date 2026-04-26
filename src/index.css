@@ -42,65 +42,7 @@
 
 @page {
   size: A4 portrait;
-  margin: 0;
-}
-
-@media print {
-  html,
-  body,
-  #root {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .report-container {
-    padding: 0 !important;
-    margin: 0 !important;
-    background: transparent !important;
-    max-width: none !important;
-  }
-
-  .report-container > * + * {
-    margin-top: 0 !important;
-  }
-
-    .report-page {
-      width: 210mm !important;
-      min-height: 297mm !important;
-      height: auto !important;
-      padding: 15mm !important;
-      margin: 0 !important;
-      box-sizing: border-box !important;
-      page-break-after: always;
-      break-after: page;
-      overflow: visible !important;
-      background: white !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      position: relative !important;
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    .report-footer {
-      position: relative !important;
-      margin-top: auto !important;
-      padding-top: 10px !important;
-      flex-shrink: 0 !important;
-    }
-
-  .report-page:last-child {
-    page-break-after: auto !important;
-    break-after: auto !important;
-  }
-
-  .no-print {
-    display: none !important;
-  }
+  margin: 8mm;
 }
 
 .radar-chart-box {
@@ -116,16 +58,6 @@
   height: 210px;
   display: block;
   overflow: visible;
-}
-
-@media print {
-  .radar-chart-box,
-  .radar-chart-box svg {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    overflow: visible !important;
-  }
 }
 
 @media screen {
@@ -151,15 +83,7 @@
   }
 }
 
-/* 내부 공통 스타일 */
-.report-page h1, .report-page h2, .report-page h3 {
-  break-inside: avoid;
-}
-
-.report-page section, .report-page .grid {
-  break-inside: avoid;
-}
-
+/* 내부 공통 스타일 (Screen/Base) */
 .chart-container {
   width: 100%;
   height: 300px;
@@ -184,92 +108,70 @@
   position: relative;
 }
 
-/* 추가적인 잘림 방지 규칙 */
-@media print {
-  .report-card,
-  .section-card,
-  .axis-card,
-  .program-card,
-  .solution-card,
-  .summary-card,
-  section,
-  div.card {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  p, div, h1, h2, h3, h4, h5, li {
-    overflow: visible !important;
-    break-inside: auto;
-  }
-}
-
-/* User specified print stabilization overrides */
 @media print {
   @page {
     size: A4;
-    margin: 0;
+    margin: 8mm;
   }
 
   html,
-  body,
-  #root {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #ffffff !important;
-  }
-
-  .report-container {
-    margin: 0 !important;
-    padding: 0 !important;
-    gap: 0 !important;
-    background: #ffffff !important;
+  body {
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .report-page {
-    width: 210mm !important;
-    min-height: 297mm !important;
+    width: auto !important;
     height: auto !important;
-    margin: 0 auto !important;
-    padding: 15mm !important;
-    box-sizing: border-box !important;
-    background: #ffffff !important;
+    min-height: auto !important;
+    max-height: none !important;
     overflow: visible !important;
-    page-break-after: always;
-    break-after: page;
+    padding: 8mm !important;
+    box-shadow: none !important;
+    page-break-before: auto !important;
+    page-break-after: auto !important;
+    break-before: auto !important;
+    break-after: auto !important;
   }
 
   .report-page:last-child,
-  .report-page:last-of-type {
-    page-break-after: auto !important;
-    break-after: auto !important;
-  }
-
-  .report-card,
-  .summary-card,
-  .axis-card,
-  .program-card,
-  .solution-card,
-  .section-card {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .page-footer,
-  .confidential-footer,
-  .report-footer {
-    position: static !important;
-    margin-top: 5mm !important;
-  }
-
   .last-page {
     page-break-after: auto !important;
     break-after: auto !important;
+  }
+
+  .report-page,
+  .report-page * {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .report-card,
+  .print-card,
+  section,
+  article,
+  div {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .report-footer {
+    margin-top: 8px !important;
+  }
+
+  .radar-chart-box,
+  .radar-chart-box svg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+  }
+
+  .no-print {
+    display: none !important;
   }
 }
