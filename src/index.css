@@ -211,4 +211,14 @@
     display: none !important;
   }
 
+  .training-page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  .training-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
 }

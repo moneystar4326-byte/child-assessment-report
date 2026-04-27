@@ -448,7 +448,7 @@ export default function ReportView({ report }: ReportViewProps) {
       {/* ──────────────────────────────────────────────────
           PAGE 4: 태권도 수련 설계 제안 (Part 1)
           ────────────────────────────────────────────────── */}
-      <section className="report-page">
+      <section className="report-page training-page training-page-1">
         <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
           <div>
             <div className="flex items-center gap-2 mb-2 text-blue-600">
@@ -519,7 +519,7 @@ export default function ReportView({ report }: ReportViewProps) {
       {/* ──────────────────────────────────────────────────
           PAGE 5: 태권도 수련 설계 제안 (Part 2) & 상담 코멘트
           ────────────────────────────────────────────────── */}
-      <section className="report-page">
+      <section className="report-page training-page training-page-2">
         <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
           <div>
             <div className="flex items-center gap-2 mb-2 text-blue-600">
