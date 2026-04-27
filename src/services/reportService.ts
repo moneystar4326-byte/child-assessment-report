@@ -20,7 +20,8 @@ export async function generateReport(data: ReportData & { skipAI?: boolean }): P
     age: childInfo.age.toString(),
     counselorName: childInfo.counselorName,
     assessmentScores: scores,
-    observationMemo: observationMemo
+    observationMemo: observationMemo,
+    organizationLogo: childInfo.organizationLogo
   });
 
   if (skipAI) {

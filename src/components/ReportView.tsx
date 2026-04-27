@@ -190,18 +190,24 @@ export default function ReportView({ report }: ReportViewProps) {
           PAGE 1: 종합 분석 및 지표 요약
           ────────────────────────────────────────────────── */}
       <section className="report-page">
-        <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-2 mb-2 text-blue-600">
-              <Sparkles className="w-5 h-5 fill-current" />
-              <span className="text-xs font-black tracking-widest uppercase">Premium Assessment</span>
+        <div className="report-header print:break-inside-avoid">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <div className="text-[11px] font-bold text-blue-600 tracking-widest uppercase mb-1.5 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 fill-current" />
+                Premium Assessment
+              </div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                발달 종합 분석 리포트
+              </h1>
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">발달 종합 분석 리포트</h1>
+            
+            <p className="whitespace-nowrap text-[12px] text-slate-700 font-semibold text-right pb-1 print:text-[10px]">
+              {childName} 아동 | 만 {age}세 | 상담자: {counselorName}
+              {report.childInfo?.consultationDate ? ` | ${report.childInfo.consultationDate}` : ''}
+            </p>
           </div>
-          <div className="text-right text-sm text-slate-500">
-            <p className="font-bold text-slate-900">{childName} 아동</p>
-            <p>만 {age}세 | 상담자: {counselorName}</p>
-          </div>
+          <div className="mt-4 border-b-[3px] border-slate-900 w-full mb-6" />
         </div>
 
         <div className="report-content">

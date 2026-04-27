@@ -108,6 +108,14 @@
   position: relative;
 }
 
+/*
+.report-logo {
+  max-width: 140px;
+  max-height: 56px;
+  object-fit: contain;
+}
+*/
+
 @media print {
   @page {
     size: A4;
@@ -170,6 +178,16 @@
     opacity: 1 !important;
     overflow: visible !important;
   }
+
+  /*
+  .report-logo {
+    max-width: 120px !important;
+    max-height: 45px !important;
+    object-fit: contain !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  */
 
   /* 2페이지 이후 레이아웃 미세조정 (강제 고정 해제 및 간격 축소) */
   .report-page:not(:first-child) {

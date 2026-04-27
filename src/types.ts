@@ -9,6 +9,7 @@ export interface ChildInfo {
   consultationDate: string;
   institutionName: string;
   counselorName: string;
+  organizationLogo?: string;
 }
 
 export interface AssessmentScores {

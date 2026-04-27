@@ -13,6 +13,7 @@ export interface BuildReportInput {
   counselorName: string;
   assessmentScores: AssessmentScores;
   observationMemo: string;
+  organizationLogo?: string;
 }
 
 /**
@@ -56,7 +57,8 @@ export function buildReport(input: BuildReportInput): ReportResult {
       guardianName: "", // Optional, as it might not be in input
       consultationDate: new Date().toLocaleDateString(),
       institutionName: "", 
-      counselorName: input.counselorName
+      counselorName: input.counselorName,
+      organizationLogo: input.organizationLogo
     },
     rawScores: input.assessmentScores,
     scoredAxes: (Object.keys(scoringResult.axisScores) as AxisId[]).map(id => ({
