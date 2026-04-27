@@ -248,4 +248,58 @@
     page-break-after: auto !important;
   }
 
+  .final-page {
+    height: 297mm !important;
+    max-height: 297mm !important;
+    min-height: 297mm !important;
+    padding: 8mm 10mm !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .final-page .final-page-content {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+  }
+
+  .final-page .final-quote-box {
+    padding: 14px 18px !important;
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .final-page .final-quote {
+    font-size: 18px !important;
+    line-height: 1.35 !important;
+  }
+
+  .final-page .final-description {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    margin-top: 8px !important;
+  }
+
+  .final-page .final-card-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .final-page .final-card {
+    padding: 12px !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  .final-page footer {
+    margin-top: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
 }

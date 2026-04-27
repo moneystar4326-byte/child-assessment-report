@@ -604,7 +604,7 @@ export default function ReportView({ report }: ReportViewProps) {
       {/* ──────────────────────────────────────────────────
           PAGE 6: 마무리 상담 코멘트
           ────────────────────────────────────────────────── */}
-      <section className="report-page last-page">
+      <section className="report-page last-page final-page">
         <div className="report-header border-b-4 border-slate-900 pb-4 mb-6 flex justify-between items-center">
           <div>
             <div className="flex items-center gap-2 mb-2 text-blue-600">
@@ -618,26 +618,26 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
         </div>
 
-        <div className="report-content flex flex-col justify-center h-full">
-          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-visible shadow-xl print:break-inside-avoid">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-20 -mt-20 pointer-events-none" />
+        <div className="report-content final-page-content flex flex-col justify-center h-full">
+          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-hidden shadow-xl print:break-inside-avoid final-quote-box">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-20 -mt-20 pointer-events-none print:hidden" />
             <div className="relative">
-              <h4 className="text-[22px] font-bold mb-6 leading-snug">
+              <h4 className="text-[22px] font-bold mb-6 leading-snug final-quote">
                 " 아이의 마음을 먼저 읽어주는 태권도 수련, <br/> 
                 성장의 조급함보다 바른 발달을 위한 따뜻한 기다림이 필요합니다. "
               </h4>
               <div className="space-y-6">
-                <p className="text-[14px] leading-snug opacity-90 text-slate-300">
+                <p className="text-[14px] leading-snug opacity-90 text-slate-300 final-description">
                   본 수련 설계는 <strong className="text-white">{childName} 아동</strong>의 발달 흐름을 바탕으로 제안하는 맞춤형 안내입니다.
                 </p>
-                <div className="grid grid-cols-2 gap-5">
-                  <div className="p-5 bg-white/10 rounded-2xl border border-white/10 h-full flex flex-col justify-start">
+                <div className="grid grid-cols-2 gap-5 final-card-grid">
+                  <div className="p-5 bg-white/10 rounded-2xl border border-white/10 h-full flex flex-col justify-start final-card">
                     <h5 className="text-[12px] font-bold text-blue-300 mb-2.5 uppercase tracking-widest border-b border-white/20 pb-2">보호자 안내</h5>
                     <p className="text-[13px] leading-snug text-slate-200">
                       가정에서도 리포트에 제시된 '가정에서의 노력'을 함께 실천해 주시면, 도장에서의 수련 효과가 더욱 깊어집니다. 아이의 작은 변화와 시도를 아낌없이 칭찬해 주세요.
                     </p>
                   </div>
-                  <div className="p-5 bg-white/10 rounded-2xl border border-white/10 h-full flex flex-col justify-start">
+                  <div className="p-5 bg-white/10 rounded-2xl border border-white/10 h-full flex flex-col justify-start final-card">
                     <h5 className="text-[12px] font-bold text-blue-300 mb-2.5 uppercase tracking-widest border-b border-white/20 pb-2">기관/도장 상담 마무리</h5>
                     <p className="text-[13px] leading-snug text-slate-200">
                       아이의 기질과 현재의 마음 상태를 세심하게 살피며, 도장에서 가장 즐겁게 성장할 수 있도록 유연하게 수련을 조정해 나가겠습니다. 궁금하신 점은 언제든 관장님께 문의해 주세요.
@@ -649,9 +649,9 @@ export default function ReportView({ report }: ReportViewProps) {
           </div>
         </div>
 
-        <div className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
+        <footer className="report-footer pt-4 border-t border-slate-100 text-right text-[10px] text-slate-400 font-mono mt-auto">
           CONFIDENTIAL | PAGE 06
-        </div>
+        </footer>
       </section>
     </div>
   );
