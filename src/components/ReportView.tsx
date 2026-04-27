@@ -147,6 +147,10 @@ export default function ReportView({ report }: ReportViewProps) {
   const rawSummary = report.aiReportText || sharedInterpretation.overallSummary || '';
   const cleanedSummary = rawSummary
     .replace(/\[.*?\]/g, '') // [전체 요약] 등 괄호 제목 제거
+    .replace(/【.*?】/g, '') // 【전체 요약】
+    .replace(/\*\*.*?\*\*/g, '') // **전체 요약**
+    .replace(/<[^>]*>?/gm, '') // HTML 태그 제거
+    .replace(/- /g, '') // 대시 제거
     .replace(/\n+/g, ' ')    // 줄바꿈을 공백으로 변환
     .replace(/\s+/g, ' ')    // 연속된 공백을 하나로 압축
     .trim();
@@ -206,10 +210,7 @@ export default function ReportView({ report }: ReportViewProps) {
               종합 분석 한눈에 보기
             </h2>
             <div className="overview-card print-compact-overview bg-blue-50 border border-blue-100 p-5 rounded-xl text-slate-700 text-[14px]">
-              <div className="screen-only-detail print:hidden leading-relaxed whitespace-pre-wrap">
-                {rawSummary}
-              </div>
-              <div className="hidden print:block overview-text">
+              <div className="leading-relaxed whitespace-pre-wrap">
                 {finalSummary}
               </div>
             </div>
@@ -619,7 +620,7 @@ export default function ReportView({ report }: ReportViewProps) {
         </div>
 
         <div className="report-content final-page-content flex flex-col justify-center h-full">
-          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-hidden shadow-xl print:break-inside-avoid final-quote-box">
+          <div className="p-8 bg-slate-900 text-white rounded-[2rem] relative overflow-visible shadow-xl print:break-inside-avoid final-quote-box">
             <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-20 -mt-20 pointer-events-none print:hidden" />
             <div className="relative">
               <h4 className="text-[22px] font-bold mb-6 leading-snug final-quote">
