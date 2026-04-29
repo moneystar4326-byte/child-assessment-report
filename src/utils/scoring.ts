@@ -18,8 +18,19 @@ export type ProfileType =
 export const SCORING_CONSTANTS = {
   STRENGTH_MIN: 80,
   NEED_MAX: 39,
+  WATCHING_MAX: 59,
+  FAIR_MAX: 79,
   SEVERE_LOW_MAX: 25,
 } as const;
+
+export const NEEDS_PRIORITY: Record<AxisId, number> = {
+  emotion: 1,
+  focus: 2,
+  selfControl: 3,
+  social: 4,
+  expression: 5,
+  challenge: 6
+};
 
 export interface ScoringResult {
   axisScores: Record<AxisId, number>;
@@ -60,9 +71,46 @@ export const getBand = (score: number): Band => {
 
 export const getAxisState = (score: number): AxisState => {
   if (score <= SCORING_CONSTANTS.NEED_MAX) return 'risk';
-  if (score <= 59) return 'unstable';
+  if (score <= SCORING_CONSTANTS.WATCHING_MAX) return 'unstable';
   return 'stable';
 };
+
+export function pickPrioritizedNeeds(axisScores: Record<AxisId, number>): AxisId[] {
+  const entries = (Object.entries(axisScores) as [AxisId, number][]);
+  
+  // 1순위: LOW (0~39) 영역
+  let needs = entries
+    .filter(([_, score]) => score <= SCORING_CONSTANTS.NEED_MAX)
+    .sort((a, b) => {
+      if (a[1] !== b[1]) return a[1] - b[1];
+      return NEEDS_PRIORITY[a[0]] - NEEDS_PRIORITY[b[0]];
+    });
+
+  // 2순위: LOW가 없다면 WATCHING (40~59) 및 FAIR 하단 (60~69) 영역에서 가져옴
+  if (needs.length === 0) {
+    const midRange = entries
+      .filter(([_, score]) => score <= 69) // 70점 미만은 잠재적 보완 영역
+      .sort((a, b) => {
+        if (a[1] !== b[1]) return a[1] - b[1];
+        return NEEDS_PRIORITY[a[0]] - NEEDS_PRIORITY[b[0]];
+      });
+    if (midRange.length > 0) {
+      needs = midRange;
+    }
+  }
+
+  return needs.slice(0, 3).map(([id]) => id);
+}
+
+export function pickPrioritizedStrengths(axisScores: Record<AxisId, number>, needs: AxisId[]): AxisId[] {
+  const entries = (Object.entries(axisScores) as [AxisId, number][]);
+  return entries
+    .filter(([id]) => !needs.includes(id as AxisId))
+    .filter(([_, score]) => score >= SCORING_CONSTANTS.STRENGTH_MIN)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([id]) => id);
+}
 
 export const calculateScoringResult = (raw: AssessmentScores): ScoringResult => {
   const ns = {
@@ -92,8 +140,11 @@ export const calculateScoringResult = (raw: AssessmentScores): ScoringResult => 
     states[id] = getAxisState(axisScores[id]);
   });
 
-  const strengthAxes = axisIds.filter(id => axisScores[id] >= SCORING_CONSTANTS.STRENGTH_MIN);
-  const needAxes = axisIds.filter(id => axisScores[id] <= SCORING_CONSTANTS.NEED_MAX);
+  const prioritizedNeeds = pickPrioritizedNeeds(axisScores);
+  const prioritizedStrengths = pickPrioritizedStrengths(axisScores, prioritizedNeeds);
+
+  const strengthAxes = prioritizedStrengths;
+  const needAxes = prioritizedNeeds;
   const severeLowAxes = axisIds.filter(id => axisScores[id] <= SCORING_CONSTANTS.SEVERE_LOW_MAX);
 
   const scoresOnly = Object.values(axisScores);

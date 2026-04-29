@@ -1,8 +1,9 @@
 import { AxisId, Band, ScoringResult } from "./scoring";
 import { TaekwondoRecommendation, TaekwondoProgramDetail } from "../types";
 
-export function analyzeTaekwondoProgram(scoring: ScoringResult, age: number): TaekwondoRecommendation {
-  const { bands, needAxes } = scoring;
+export function analyzeTaekwondoProgram(scoring: ScoringResult, age: number, interpretedNeeds?: AxisId[]): TaekwondoRecommendation {
+  const { bands } = scoring;
+  const needAxes = interpretedNeeds || scoring.needAxes;
   
   const reasons: string[] = [];
   const programs: string[] = [];
@@ -79,10 +80,10 @@ export function analyzeTaekwondoProgram(scoring: ScoringResult, age: number): Ta
     application: (bands.selfControl === 'supportNeeded')
       ? "제자리 뛰기 10초 후 멈추기, 점프 5번 후 기다리기처럼 짧은 활동과 멈춤 신호를 결합한 '시작-멈춤' 활동을 진행합니다."
       : (age >= 11)
-        ? "서킷 트레이닝이나 인터벌 연습 등 체력 기록 관리가 포함된 고강도 수련을 통해 신체 조절 능력을 극대화합니다."
-        : "장애물 달리기나 놀이형 신체 활동을 통해 즐겁게 기초 체력을 기르고 신체 균형 감각을 발달시킵니다.",
+        ? "서킷 트레이닝이나 인터벌 연습 등 체력 기록 관리가 포함된 단계적 심화 체력 수련을 통해 신체 조절 능력을 극대화합니다."
+        : "코스 달리기나 놀이형 신체 활동을 통해 즐겁게 기초 체력을 기르고 신체 균형 감각을 발달시킵니다.",
     effect: (bands.selfControl === 'supportNeeded')
-      ? "지도자의 신호를 정확히 듣고 자신의 몸을 통제하는 경험을 반복하여 충동 조절력을 키워줍니다."
+      ? "지도자의 신호를 정확히 듣고 자신의 몸을 조절하는 경험을 반복하여 행동 조절력을 키워줍니다."
       : "근력과 유연성을 기르고 자신의 신체 능력을 인지하여 운동 수행 능력을 향상시킵니다.",
     caution: (bands.selfControl === 'supportNeeded')
       ? "운동의 강도나 속도보다 '멈춤' 신호에 즉각적으로 반응하는 조절력을 우선순위에 둡니다."
@@ -147,9 +148,9 @@ export function analyzeTaekwondoProgram(scoring: ScoringResult, age: number): Ta
   const detailedPrograms = [inseongDetail, skippingDetail, physicalDetail, poomsaeDetail, sparringDetail, demoDetail];
 
   // 기존 로직 유지 (프로그램 목록 등)
-  if (bands.emotion === 'supportNeeded') constraints.push("자유 겨루기 금지 (감정 과열 방지)");
-  if (bands.focus === 'supportNeeded') constraints.push("품새 전체 수행 금지 (단계별 분절 수련)");
-  if (bands.challenge === 'supportNeeded') constraints.push("높은 난이도 과제 부여 금지");
+  if (needAxes.includes('emotion') || bands.emotion === 'supportNeeded' || bands.emotion === 'watching') constraints.push("초기에는 자유 겨루기보다 약속 미트 활동을 우선합니다.");
+  if (needAxes.includes('focus') || bands.focus === 'supportNeeded' || bands.focus === 'watching') constraints.push("초기에는 전체 품새보다 1~3동작 분절 수련을 우선합니다.");
+  if (needAxes.includes('challenge') || bands.challenge === 'supportNeeded' || bands.challenge === 'watching') constraints.push("초기에는 쉽게 성공할 수 있는 단계형 과제를 우선합니다.");
 
   const axisLabels: Record<AxisId, string> = {
     focus: "집중력",

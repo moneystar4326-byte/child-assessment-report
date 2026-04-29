@@ -24,8 +24,16 @@ export function buildReport(input: BuildReportInput): ReportResult {
   // A. 점수 계산 엔진 호출
   const scoringResult = calculateScoringResult(input.assessmentScores);
 
+  // 3. 낮은 영역 조합 감지
+  const focusLow = scoringResult.bands.focus === 'supportNeeded';
+  const selfControlLow = scoringResult.bands.selfControl === 'supportNeeded';
+  let combinationKey: string | undefined = undefined;
+  if (focusLow && selfControlLow) {
+    combinationKey = "focus_selfControl_low";
+  }
+
   // B. 해석 엔진 호출
-  const sharedInterpretation = buildSharedInterpretation(scoringResult, input.observationMemo);
+  const sharedInterpretation = buildSharedInterpretation(scoringResult, input.observationMemo, input.childName, combinationKey);
 
   // C. 기질 분석 엔진 호출
   const temperament = analyzeTemperament(
@@ -34,7 +42,11 @@ export function buildReport(input: BuildReportInput): ReportResult {
   );
 
   // D. 태권도 프로그램 분석 엔진 호출
-  const taekwondoRecommendation = analyzeTaekwondoProgram(scoringResult, parseInt(input.age, 10));
+  const taekwondoRecommendation = analyzeTaekwondoProgram(
+    scoringResult, 
+    parseInt(input.age, 10),
+    sharedInterpretation.needs
+  );
 
   // E. 차트 데이터 생성 호출
   const radarChartData = buildRadarChartData(

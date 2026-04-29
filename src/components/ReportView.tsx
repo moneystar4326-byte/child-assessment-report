@@ -143,46 +143,6 @@ export default function ReportView({ report }: ReportViewProps) {
   const programPageOne = allPrograms.slice(0, 3);
   const programPageTwo = allPrograms.slice(3, 6);
 
-  // 종합 분석 한눈에 보기 압축 (최대 3문장, 줄바꿈 및 제목 제거)
-  const rawSummary = report.aiReportText || sharedInterpretation.overallSummary || '';
-  const cleanedSummary = rawSummary
-    .replace(/\[.*?\]/g, '') // [전체 요약] 등 괄호 제목 제거
-    .replace(/【.*?】/g, '') // 【전체 요약】
-    .replace(/\*\*.*?\*\*/g, '') // **전체 요약**
-    .replace(/<[^>]*>?/gm, '') // HTML 태그 제거
-    .replace(/- /g, '') // 대시 제거
-    .replace(/\n+/g, ' ')    // 줄바꿈을 공백으로 변환
-    .replace(/\s+/g, ' ')    // 연속된 공백을 하나로 압축
-    .trim();
-  const sentences = cleanedSummary.match(/[^.!?]+[.!?]+/g) || [cleanedSummary];
-  const finalSummary = sentences.slice(0, 3).join(' ').trim();
-
-  // 주요 발달 특성 요약 압축 (6개 축을 3문장으로 결합)
-  const getAxisSummary = (id: AxisId) => report.sharedInterpretation?.axisInterpretations?.[id]?.summary || "";
-  const combineAxisPair = (id1: AxisId, id2: AxisId) => {
-    const s1 = getAxisSummary(id1).trim();
-    const s2 = getAxisSummary(id2).trim();
-    if (!s1) return s2;
-    if (!s2) return s1;
-    
-    let joinedS1 = s1;
-    if (joinedS1.endsWith('입니다.')) joinedS1 = joinedS1.replace(/입니다\.$/, '이며,');
-    else if (joinedS1.endsWith('있습니다.')) joinedS1 = joinedS1.replace(/있습니다\.$/, '있으며,');
-    else if (joinedS1.endsWith('합니다.')) joinedS1 = joinedS1.replace(/합니다\.$/, '하며,');
-    else if (joinedS1.endsWith('습니다.')) joinedS1 = joinedS1.replace(/습니다\.$/, '으며,');
-    else if (joinedS1.match(/[가-힣]니다\.$/)) joinedS1 = joinedS1.replace(/니다\.$/, '며,');
-    else joinedS1 = joinedS1.replace(/\.$/, '고,');
-
-    return `${joinedS1} ${s2}`;
-  };
-
-  const combinedFeaturesText = [
-    combineAxisPair('focus', 'emotion'),
-    combineAxisPair('social', 'expression'),
-    combineAxisPair('selfControl', 'challenge')
-  ].filter(Boolean).join(' ');
-
-
   return (
     <div className="report-container font-sans text-slate-800">
       
@@ -217,7 +177,7 @@ export default function ReportView({ report }: ReportViewProps) {
             </h2>
             <div className="overview-card print-compact-overview bg-blue-50 border border-blue-100 p-5 rounded-xl text-slate-700 text-[14px]">
               <div className="leading-relaxed whitespace-pre-wrap">
-                {finalSummary}
+                {sharedInterpretation.overallSummary || "분석 결과를 불러오는 중입니다."}
               </div>
             </div>
           </div>
@@ -280,7 +240,7 @@ export default function ReportView({ report }: ReportViewProps) {
               주요 발달 특성 요약
             </h2>
             <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl leading-relaxed text-slate-700 text-[13px]">
-              {combinedFeaturesText}
+              {sharedInterpretation.featuresSummary || "분석 결과를 불러오는 중입니다."}
             </div>
           </div>
         </div>
@@ -354,6 +314,20 @@ export default function ReportView({ report }: ReportViewProps) {
         </div>
 
         <div className="report-content flex flex-col justify-between h-full">
+          {report.sharedInterpretation?.detailedOverallAnalysis && (
+            <div className="mb-6 counseling-analysis">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3">
+                <div className="w-1 h-5 bg-gold-500" />
+                종합 상담 해석
+              </h2>
+              <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl relative overflow-visible shadow-sm">
+                <p className="text-slate-800 text-[14px] leading-relaxed whitespace-pre-wrap font-medium">
+                  {report.sharedInterpretation.detailedOverallAnalysis}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="grid grid-cols-2 gap-6 mb-6">
               <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 shadow-sm print:break-inside-avoid">
