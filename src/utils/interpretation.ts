@@ -201,12 +201,12 @@ export function buildMemoReflection(observationMemo: string) {
     const matchedKeywords = Array.from(matchedKeywordsSet);
     const relatedAxes = Array.from(relatedAxesSet);
     let summary = "";
-    if (relatedAxes.length === 0) {
+    if ((relatedAxes ?? []).length === 0) {
         summary = "별도의 보호자 관찰 메모가 없어, 문항 응답 결과를 중심으로 발달 흐름을 확인했습니다.";
-    } else if (relatedAxes.length === 1) {
+    } else if ((relatedAxes ?? []).length === 1) {
         summary = `${AXIS_NAME_MAP[relatedAxes[0]]} 관련 특성이 관찰되었습니다.`;
     } else {
-        const axisNames = relatedAxes.map(id => AXIS_NAME_MAP[id]).join(", ");
+        const axisNames = (relatedAxes ?? []).map(id => AXIS_NAME_MAP[id]).join(", ");
         summary = `${axisNames} 영역과 관련된 모습이 함께 관찰되었습니다.`;
     }
     return { summary, matchedKeywords, relatedAxes };
@@ -237,7 +237,7 @@ export function buildAxisInterpretation(input: {
 }
 
 export function removeConflicts(strengths: AxisId[], needs: AxisId[]): AxisId[] {
-    return strengths.filter(s => !needs.includes(s));
+    return (strengths ?? []).filter(s => !(needs ?? []).includes(s));
 }
 
 export function buildOverallSummary(params: {
@@ -251,40 +251,40 @@ export function buildOverallSummary(params: {
     let keyTraits = "";
     let parentingGuidance = "";
 
-    if (needs.length >= 3) {
+    if ((needs ?? []).length >= 3) {
         totalSummary = `${childName} 아동은 현재 여러 발달 영역에서 기초 습관을 함께 다져가는 과정에 있습니다. 한 가지 영역만의 모습으로 단정하기보다, 전반적인 생활 습관과 참여 태도를 차근차근 안정시켜가는 방향이 적절합니다.`;
-    } else if (needs.length === 2 && needs.includes('focus') && needs.includes('selfControl')) {
-        const otherAxes = (Object.keys(axisScores) as AxisId[]).filter(id => !needs.includes(id));
-        const otherNames = otherAxes.map(id => AXIS_NAME_MAP[id]).join("·");
+    } else if ((needs ?? []).length === 2 && (needs ?? []).includes('focus') && (needs ?? []).includes('selfControl')) {
+        const otherAxes = (Object.keys(axisScores ?? {}) as AxisId[]).filter(id => !(needs ?? []).includes(id));
+        const otherNames = (otherAxes ?? []).map(id => AXIS_NAME_MAP[id]).join("·");
         totalSummary = `${childName} 아동은 ${otherNames} 영역에서는 비교적 고른 발달 기반을 보이고 있으나, 집중력과 자기조절 영역에서는 활동 흐름을 유지하고 행동을 조절하는 데 반복적인 안내가 필요한 상태입니다. 따라서 아이를 부정적으로 단정하기보다, 짧고 분명한 안내와 작은 성공 경험을 통해 집중 유지와 자기조절의 기초를 차근차근 다져가는 방향이 적절합니다.`;
-    } else if (needs.length === 2) {
+    } else if ((needs ?? []).length === 2) {
         totalSummary = `${childName} 아동의 현재 지표 분석 결과, 특정 영역에서 기초적인 습관 형성과 우선적인 지원이 필요한 상태입니다.`;
-    } else if (needs.length === 1) {
+    } else if ((needs ?? []).length === 1) {
         totalSummary = `${childName} 아동은 전체적인 발달 흐름 중 일부 영역에서 세심한 관찰과 도움이 필요하여, 반복적인 연습과 구체적인 지도가 병행되어야 합니다.`;
-    } else if (strengths.length >= 1) {
+    } else if ((strengths ?? []).length >= 1) {
         totalSummary = `${childName} 아동은 강점으로 발휘되는 영역을 중심으로 좋은 흐름을 보이고 있으며, 이를 바탕으로 자신감을 확장해가는 긍정적인 단계입니다.`;
     } else {
         totalSummary = `${childName} 아동은 전체적으로 균형 있는 발달 상태를 보여주고 있으며, 꾸준한 활동 참여를 통해 성취의 기초를 탄탄히 다져가고 있습니다.`;
     }
 
-    if (needs.length >= 3) {
-        const needNames = needs.map(id => AXIS_NAME_MAP[id]).join(", ");
+    if ((needs ?? []).length >= 3) {
+        const needNames = (needs ?? []).map(id => AXIS_NAME_MAP[id]).join(", ");
         keyTraits = `${needNames} 등 전반적인 영역에서 짧고 분명한 안내와 반복적인 성공 경험을 누적하여 자신감을 회복하는 것이 가장 주요한 특징입니다.`;
-    } else if (needs.length > 0) {
-        const needNames = needs.map(id => AXIS_NAME_MAP[id]).join(", ");
+    } else if ((needs ?? []).length > 0) {
+        const needNames = (needs ?? []).map(id => AXIS_NAME_MAP[id]).join(", ");
         keyTraits = `${needNames} 영역에서 기초를 다지는 과정에 세심한 도움이 필요하며, 아이의 눈높이에 맞춘 간결한 안내를 통한 반복적인 지원이 우선되어야 합니다.`;
-    } else if (needs.length === 0 && strengths.length > 0) {
+    } else if ((needs ?? []).length === 0 && (strengths ?? []).length > 0) {
         keyTraits = "집중력, 감정조절, 사회성, 자기표현, 자기조절, 도전성 전 영역에서 강점 흐름이 확인되며, 이러한 높은 몰입도와 적응력을 바탕으로 자신이 가진 역량을 균형 있게 발휘하는 것이 가장 주요한 특징입니다.";
-    } else if (needs.length === 0 && strengths.length === 0) {
+    } else if ((needs ?? []).length === 0 && (strengths ?? []).length === 0) {
         keyTraits = "집중력, 감정조절, 사회성, 자기표현, 자기조절, 도전성 전 영역에서 비교적 고른 발달 기반을 보이고 있으며, 다양한 경험을 통해 안정적인 흐름을 넓혀가는 것이 가장 주요한 특징입니다.";
-    } else if (strengths.length > 0) {
-        const strengthNames = strengths.map(id => AXIS_NAME_MAP[id]).join(", ");
+    } else if ((strengths ?? []).length > 0) {
+        const strengthNames = (strengths ?? []).map(id => AXIS_NAME_MAP[id]).join(", ");
         keyTraits = `${strengthNames} 영역에서 보여주고 있는 높은 몰입도와 적응력을 활용하여, 성취의 기쁨을 다른 활동 영역으로 자연스럽게 연결하는 것이 주요 특징입니다.`;
     } else {
         keyTraits = "각 발달 영역이 연령에 적합한 기초 형성을 진행하고 있으며, 균형 잡힌 발달을 도모하고 있는 것이 현재의 특징입니다.";
     }
 
-    if (needs.length > 0) {
+    if ((needs ?? []).length > 0) {
         parentingGuidance = "가정에서도 아이에게 짧고 명확한 안내를 제공하여 습관 형성의 기초를 다질 수 있도록 도와주시고, 일관된 규칙을 통해 반복적인 연습을 응원해 주시는 것이 중요합니다.";
     } else {
         parentingGuidance = "아이의 주도적인 시도를 격려하고 결과보다 과정에서의 노력을 인정해 주시면, 현재의 좋은 흐름이 다른 영역으로 더욱 기분 좋게 확장될 수 있습니다.";
@@ -300,7 +300,7 @@ export function buildGuidance(params: {
     const { strengths, needs } = params;
     const home: string[] = [];
     const center: string[] = [];
-    if (needs.length > 0) {
+    if ((needs ?? []).length > 0) {
         home.push("아이의 시도에 대해 즉각적이고 구체적으로 반응하여 올바른 행동을 반복할 수 있도록 도와주세요.");
         home.push("집안의 규칙을 단순화하고, 일관된 일과를 유지하여 아이에게 심리적 편안함을 제공해 주세요.");
         center.push("수업 전 명확한 시각적 예고와 짧은 안내를 통해 아이가 활동의 흐름을 놓치지 않게 도와주세요.");
@@ -348,7 +348,7 @@ export function buildDetailedOverallAnalysis(params: {
     const name = getFriendlyName(childName);
 
     // 1. 전 영역 강점형 (Needs 0 & Strengths 존재)
-    if (params.needs.length === 0 && params.strengths.length > 0) {
+    if ((params.needs ?? []).length === 0 && (params.strengths ?? []).length > 0) {
         const text1 = `${name.subject} 전반적인 발달 지표가 매우 안정적으로 나타나고 있으며, 집중력·감정조절·사회성·자기표현·자기조절·도전성 전 영역에서 강점 흐름을 보이고 있습니다. 현재는 특정 영역을 보완하는 단계라기보다, 이미 잘 형성된 발달 기반을 더 넓은 활동과 책임 있는 역할로 확장해가는 단계로 이해하는 것이 적절합니다.`;
         const text2 = `${name.subject} 활동에 몰입하고, 감정을 조절하며, 또래와 협력하고, 자신의 생각을 표현하는 힘이 고르게 나타나는 아이로 볼 수 있습니다. 이런 아이에게는 단순 반복 과제만 제공하기보다, 스스로 목표를 세우고 과정을 돌아보며 더 깊이 탐색할 수 있는 심화 경험을 제공하는 것이 좋습니다.`;
         const text3 = `기관에서는 리더 역할, 또래를 돕는 활동, 발표나 시범처럼 자신이 가진 역량을 공동체 안에서 긍정적으로 발휘할 수 있는 기회를 제공해 주세요. 이때 결과만 칭찬하기보다 준비 과정, 책임감, 배려, 꾸준함을 함께 인정해 주면 아이의 강점이 더욱 균형 있게 확장될 수 있습니다.`;
@@ -357,7 +357,7 @@ export function buildDetailedOverallAnalysis(params: {
     }
 
     // 2. 균형 발달형 (Needs 0 & Strengths 0 - 주로 70~79점대)
-    if (params.needs.length === 0 && params.strengths.length === 0) {
+    if ((params.needs ?? []).length === 0 && (params.strengths ?? []).length === 0) {
         const text1 = `${name.subject} 현재 특정 영역에서 두드러진 지원 필요가 나타나기보다는, 여러 발달 영역에서 비교적 고른 기반을 형성해가는 단계입니다. 다만 아직 핵심 강점으로 단정하기보다는, 안정적인 흐름을 다양한 활동 경험 속에서 더 넓혀가는 과정으로 이해하는 것이 적절합니다.`;
         const text2 = `현재 ${name.possessive} 지표는 모든 영역이 고르게 발달하고 있음을 보여줍니다. 이런 시기에는 한 가지 뛰어난 재능을 찾으려 조급해하기보다, 아이가 여러 활동을 고르게 경험하며 자신감을 쌓을 수 있도록 안내해 주어야 합니다. 긍정적인 참여 태도가 형성되고 있으므로, 이를 다양한 상황으로 확장해나가는 것이 핵심입니다.`;
         const text3 = `기관에서는 아이가 모든 활동에 고르게 참여할 수 있는 환경을 조성해 주시고, 친구들과 협력하는 과정에서 얻는 즐거움을 충분히 느끼게 해주세요. 이미 안정적인 기반을 갖추고 있으므로, 조금 더 복잡한 과제나 새로운 친구들과의 상호작용을 통해 사회적 역량을 한 단계 높여갈 수 있습니다.`;
@@ -366,14 +366,14 @@ export function buildDetailedOverallAnalysis(params: {
     }
 
     // 3. 집중력 + 자기조절 정밀 분석형
-    if (combinationKey === "focus_selfControl_low" && params.strengths.length === 0) {
+    if (combinationKey === "focus_selfControl_low" && (params.strengths ?? []).length === 0) {
         const relationalAxes = ['emotion', 'social', 'expression'] as AxisId[];
         const strongRelational = relationalAxes.filter(id => params.bands[id] === 'strong' || params.bands[id] === 'fair');
         
-        if (strongRelational.length >= 2) {
+        if ((strongRelational ?? []).length >= 2) {
             let possibility = "";
             
-            if (strongRelational.length > 0) {
+            if ((strongRelational ?? []).length > 0) {
                 possibility += `감정 표현과 사회성 등 관계의 기본 힘이 비교적 고른 발달 기반으로 볼 수 있어, 안내가 주어졌을 때 다시 활동에 참여할 수 있는 가능성이 있습니다. `;
             }
             if (axisScores['challenge'] >= 80) {
@@ -400,7 +400,7 @@ export function buildDetailedOverallAnalysis(params: {
         }
     }
 
-    const hasStrength = params.strengths.length > 0;
+    const hasStrength = (params.strengths ?? []).length > 0;
     
     if (hasStrength) {
         const text1 = `입력된 평가 결과를 바탕으로 ${name.possessive} 발달 흐름을 살펴보면, 뚜렷하게 돋보이는 강점과 더불어 앞으로 세심하게 채워가야 할 영역이 함께 공존하는 다채로운 특성을 보여주고 있습니다. 이러한 혼합형 발달 흐름은 아이가 자신만의 고유한 성향을 바탕으로 세상을 탐색하고 있음을 의미하며, 강점을 지렛대 삼아 부족한 부분을 자연스럽게 보완해 나가는 맞춤형 접근이 매우 효과적입니다. `;

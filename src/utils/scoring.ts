@@ -87,14 +87,14 @@ export function pickPrioritizedNeeds(axisScores: Record<AxisId, number>): AxisId
     });
 
   // 2순위: LOW가 없다면 WATCHING (40~59) 및 FAIR 하단 (60~69) 영역에서 가져옴
-  if (needs.length === 0) {
+  if ((needs ?? []).length === 0) {
     const midRange = entries
       .filter(([_, score]) => score <= 69) // 70점 미만은 잠재적 보완 영역
       .sort((a, b) => {
         if (a[1] !== b[1]) return a[1] - b[1];
         return NEEDS_PRIORITY[a[0]] - NEEDS_PRIORITY[b[0]];
       });
-    if (midRange.length > 0) {
+    if ((midRange ?? []).length > 0) {
       needs = midRange;
     }
   }
@@ -154,18 +154,18 @@ export const calculateScoringResult = (raw: AssessmentScores): ScoringResult => 
   const lowestAxis = axisIds.filter(id => axisScores[id] === minS);
 
   let profileType: ProfileType = 'BALANCED';
-  if (severeLowAxes.length > 0) profileType = 'SENSITIVE_ALERT';
-  else if (needAxes.length > 0) profileType = 'NEEDS_CARE';
-  else if (strengthAxes.length === 6) profileType = 'ALL_ROUNDER';
-  else if (strengthAxes.length > 0) profileType = 'STRENGTH_MODEL';
+  if ((severeLowAxes ?? []).length > 0) profileType = 'SENSITIVE_ALERT';
+  else if ((needAxes ?? []).length > 0) profileType = 'NEEDS_CARE';
+  else if ((strengthAxes ?? []).length === 6) profileType = 'ALL_ROUNDER';
+  else if ((strengthAxes ?? []).length > 0) profileType = 'STRENGTH_MODEL';
 
   const result = {
     axisScores, bands, states, rawInput: raw,
     strengthAxes, needAxes, severeLowAxes, highestAxis, lowestAxis,
-    hasAnyStrength: strengthAxes.length > 0,
-    hasAnyNeed: needAxes.length > 0,
-    hasSevereLow: severeLowAxes.length > 0,
-    allAxesStrong: strengthAxes.length === 6,
+    hasAnyStrength: (strengthAxes ?? []).length > 0,
+    hasAnyNeed: (needAxes ?? []).length > 0,
+    hasSevereLow: (severeLowAxes ?? []).length > 0,
+    allAxesStrong: (strengthAxes ?? []).length === 6,
     profileType
   };
 

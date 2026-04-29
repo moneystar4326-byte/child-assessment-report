@@ -117,7 +117,7 @@ export default function App() {
 
   const handleCopy = () => {
     if (report) {
-      navigator.clipboard.writeText(report.sharedInterpretation.overallSummary);
+      navigator.clipboard.writeText(report?.sharedInterpretation?.overallSummary ?? "");
       alert('상담 요약 내용이 클립보드에 복사되었습니다.');
     }
   };

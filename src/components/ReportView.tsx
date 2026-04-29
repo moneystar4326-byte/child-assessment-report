@@ -136,12 +136,20 @@ function PureRadarChart({ data }: { data: { subject: string; score: number }[] }
 }
 
 export default function ReportView({ report }: ReportViewProps) {
+  if (!report?.sharedInterpretation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-700">
+        리포트 데이터를 준비하는 중입니다.
+      </div>
+    );
+  }
+
   const { sharedInterpretation, childName, age, counselorName } = report;
 
   // 프로그램 배열 분리 (요구사항 6번)
-  const allPrograms = report.taekwondoRecommendation?.detailedPrograms || [];
-  const programPageOne = allPrograms.slice(0, 3);
-  const programPageTwo = allPrograms.slice(3, 6);
+  const allPrograms = report?.taekwondoRecommendation?.detailedPrograms || [];
+  const programPageOne = (allPrograms ?? []).slice(0, 3);
+  const programPageTwo = (allPrograms ?? []).slice(3, 6);
 
   return (
     <div className="report-container font-sans text-slate-800">
@@ -199,7 +207,7 @@ export default function ReportView({ report }: ReportViewProps) {
               <div className="col-span-5 bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center relative">
                 <div className="radar-chart-box flex justify-center items-center">
                   <PureRadarChart 
-                    data={report.radarChartData?.length ? report.radarChartData : [
+                    data={(report?.radarChartData ?? []).length ? (report?.radarChartData ?? []) : [
                       { subject: "집중력", score: 0 },
                       { subject: "감정조절", score: 0 },
                       { subject: "사회성", score: 0 },
@@ -336,10 +344,10 @@ export default function ReportView({ report }: ReportViewProps) {
                   발달 강점 (Strengths)
                 </h3>
               <div className="flex flex-wrap gap-2">
-                {(report.sharedInterpretation?.strengths?.length ?? 0) > 0 ? (
-                  report.sharedInterpretation?.strengths?.map(id => (
+                {(report?.sharedInterpretation?.strengths ?? []).length > 0 ? (
+                  (report?.sharedInterpretation?.strengths ?? []).map(id => (
                     <span key={id} className="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 text-[12px] font-bold rounded-2xl shadow-sm">
-                      {report.sharedInterpretation?.axisInterpretations?.[id]?.label}
+                      {report?.sharedInterpretation?.axisInterpretations?.[id]?.label}
                     </span>
                   ))
                 ) : (
@@ -353,10 +361,10 @@ export default function ReportView({ report }: ReportViewProps) {
                 우선 지원 영역 (Needs)
               </h3>
               <div className="flex flex-wrap gap-2">
-                {(report.sharedInterpretation?.needs?.length ?? 0) > 0 ? (
-                  report.sharedInterpretation?.needs?.map(id => (
+                {(report?.sharedInterpretation?.needs ?? []).length > 0 ? (
+                  (report?.sharedInterpretation?.needs ?? []).map(id => (
                     <span key={id} className="px-4 py-2 bg-white border border-rose-200 text-rose-700 text-[12px] font-bold rounded-2xl shadow-sm">
-                      {report.sharedInterpretation?.axisInterpretations?.[id]?.label}
+                      {report?.sharedInterpretation?.axisInterpretations?.[id]?.label}
                     </span>
                   ))
                 ) : (
@@ -404,7 +412,7 @@ export default function ReportView({ report }: ReportViewProps) {
               <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
                 <h4 className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-widest border-b border-slate-200 pb-2">[가정에서의 노력]</h4>
                 <ul className="space-y-3">
-                  {report.sharedInterpretation?.guidance?.home?.slice(0, 2).map((item, idx) => (
+                  {(report?.sharedInterpretation?.guidance?.home ?? []).slice(0, 2).map((item, idx) => (
                     <li key={idx} className="text-[12px] text-slate-700 pl-3 border-l-4 border-blue-200 leading-snug font-bold">
                       {item}
                     </li>
@@ -414,7 +422,7 @@ export default function ReportView({ report }: ReportViewProps) {
               <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
                 <h4 className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-widest border-b border-slate-200 pb-2">[기관/도장에서의 지도]</h4>
                 <ul className="space-y-3">
-                  {report.sharedInterpretation?.guidance?.center?.slice(0, 2).map((item, idx) => (
+                  {(report?.sharedInterpretation?.guidance?.center ?? []).slice(0, 2).map((item, idx) => (
                     <li key={idx} className="text-[12px] text-slate-700 pl-3 border-l-4 border-slate-300 leading-snug font-bold">
                       {item}
                     </li>
@@ -559,14 +567,14 @@ export default function ReportView({ report }: ReportViewProps) {
             })}
           </div>
 
-          {report.taekwondoRecommendation && report.taekwondoRecommendation.constraints.length > 0 && (
+          {report?.taekwondoRecommendation && (report?.taekwondoRecommendation?.constraints ?? []).length > 0 && (
             <div className="mb-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl shrink-0 print:break-inside-avoid">
               <p className="text-[12px] font-bold text-rose-600 mb-2 uppercase tracking-widest flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 심화 수련 제한 및 안전 가이드
               </p>
               <ul className="grid grid-cols-2 gap-2.5">
-                {report.taekwondoRecommendation.constraints.map((c, idx) => (
+                {(report?.taekwondoRecommendation?.constraints ?? []).map((c, idx) => (
                   <li key={idx} className="text-[11px] text-rose-800 flex items-start gap-2 leading-snug font-bold">
                     <div className="w-1.5 h-1.5 bg-rose-400 rounded-full mt-1 shrink-0" />
                     {c}

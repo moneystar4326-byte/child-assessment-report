@@ -73,12 +73,12 @@ export function buildReport(input: BuildReportInput): ReportResult {
       organizationLogo: input.organizationLogo
     },
     rawScores: input.assessmentScores,
-    scoredAxes: (Object.keys(scoringResult.axisScores) as AxisId[]).map(id => ({
+    scoredAxes: (Object.keys(scoringResult?.axisScores ?? {}) as AxisId[]).map(id => ({
       id,
-      label: sharedInterpretation.axisInterpretations[id].label,
-      score: scoringResult.axisScores[id],
-      band: scoringResult.bands[id],
-      state: scoringResult.states[id]
+      label: sharedInterpretation?.axisInterpretations?.[id]?.label ?? id,
+      score: scoringResult?.axisScores?.[id] ?? 0,
+      band: scoringResult?.bands?.[id] ?? 'watching',
+      state: scoringResult?.states?.[id] ?? 'unstable'
     })),
     observationMemo: input.observationMemo,
     memoAnalysis: {
